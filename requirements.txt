@@ -1,6 +1,6 @@
 fastapi
 
-sqlalchemy[asyncio]ä
+sqlalchemy[asyncio]
 aiomysql
 alembic
 
