@@ -5,3 +5,4 @@ aiomysql
 alembic
 
 bcrypt
+gunicorn
