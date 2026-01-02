@@ -1,0 +1,94 @@
+---
+# Main provision playbook for tenant sites
+# Params:
+#   - tenant_tag: unique 4-char identifier
+#   - service_type: flarum|mediawiki|wordpress
+#   - tenant_admin_email: admin email address
+#   - tenant_admin_password: admin password (hashed for some services)
+#   - tenant_db_password: database password
+
+- name: Check if tenant already exists
+  ansible.builtin.stat:
+      path: "{{ paths.tenants.root }}/{{ tenant_tag }}"
+  register: tenant_exists
+  tags: [always]
+
+- name: Fail if tenant already exists
+  ansible.builtin.fail:
+      msg: "Tenant directory `{{ paths.tenants.root }}/{{ tenant_tag }}` already exists!"
+  when: not force | default(false) and tenant_exists.stat.exists
+  tags: [always]
+
+- name: Create tenant Linux user
+  ansible.builtin.user:
+      name: "tenant_{{ tenant_tag }}"
+      shell: /sbin/nologin
+      create_home: false
+  tags: [always]
+
+- name: Create tenant database
+  community.mysql.mysql_db:
+      name: "tenant_{{ tenant_tag }}"
+      encoding: utf8mb4
+      collation: utf8mb4_unicode_ci
+      login_unix_socket: /var/run/mysqld/mysqld.sock
+      state: present
+  tags: [always]
+
+- name: Create database user for tenant
+  community.mysql.mysql_user:
+      name: "tenant_{{ tenant_tag }}"
+      password: "{{ tenant_db_password }}"
+      priv: "tenant_{{ tenant_tag }}.*:ALL"
+      host: 127.0.0.1
+      login_unix_socket: /var/run/mysqld/mysqld.sock
+      column_case_sensitive: true
+      state: present
+  tags: [always]
+
+- name: Create PHP-FPM pool for tenant
+  ansible.builtin.template:
+      src: "{{ playbook_dir }}/files/etc/php/fpm/pool-template.conf"
+      dest: /etc/php/fpm/pool.d/{{ tenant_tag }}.conf
+      mode: "644"
+  tags: [always]
+
+- name: "Deploy {{ service_type }}"
+  ansible.builtin.include_tasks: "./{{ service_type }}.yml"
+  tags: [always]
+
+- name: Render config.json template with tenant information
+  ansible.builtin.template:
+      src: "{{ playbook_dir }}/files/srv/skeleton/etc/config.json"
+      dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/etc/config.json"
+      owner: "tenant_{{ tenant_tag }}"
+      group: "tenant_{{ tenant_tag }}"
+      mode: "640"
+  tags: [always]
+
+- name: Send welcome email
+  community.general.mail:
+      host: "127.0.0.1"
+      to: "{{ tenant_admin_email }}"
+      subject: "Welcome to no-cost.site!"
+      body: |
+          Your site instance has been provisioned successfully!
+
+          Domain: {{ tenant_tag }}.{{ main_domain }}
+          Service: {{ service_type | capitalize }}
+
+          If you have any questions, please let us know by replying to this e-mail.
+      from: "noreply@{{ main_domain }}"
+  failed_when: false
+  tags: [always]
+
+- name: Reload services
+  ansible.builtin.systemd:
+      name: "{{ web_service }}"
+      state: reloaded
+  loop:
+      - "php{{ php_version }}-fpm"
+      - "nginx"
+  loop_control:
+      loop_var: web_service
+  tags: [always]

@@ -1,8 +1,11 @@
-# FreeFlarum Backend
+# no-cost backend
 
-Repository with the backend portion of [FreeFlarum's source code](https://github.com/FreeFlarum/freeflarum).
+Repository with the backend portion of [no-cost's source code](https://github.com/no-cost/backend).
 
-## Local Development
+## Local development
+
+NB running the API backend locally is used only for testing the API routes/definitions.
+Full tenant lifecycle should be tested by deploying to a development/separate server instead.
 
 ```bash
 # .venv
@@ -21,6 +24,6 @@ alembic upgrade head
 fastapi dev
 ```
 
-## Deployment
+## Production deployment
 
-Go to the [FreeFlarum/deploy](https://github.com/FreeFlarum/deploy) repository and follow the instructions there.
+See the [no-cost/deploy](https://github.com/no-cost/deploy) repository.

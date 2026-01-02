@@ -1,8 +1,5 @@
-fastapi[standard]
-
+httpx
 aiosqlite
 
 pytest
-pytest-asyncio
-pytest-cov
-httpx
+pytest_asyncio

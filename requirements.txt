@@ -1,9 +1,11 @@
 fastapi
+pydantic[email]
 
-sqlalchemy[asyncio]
-aiomysql
 alembic
+aiomysql
+sqlalchemy[asyncio]
 
 bcrypt
 uvicorn
 gunicorn
+ansible-runner

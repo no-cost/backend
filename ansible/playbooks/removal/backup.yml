@@ -1,0 +1,44 @@
+---
+# Backup tenant data before removal
+# Params:
+#   - tenant_dir
+#   - tenant_user
+#   - tenant_db
+#   - backup_dir
+
+- name: Create backup directory
+  ansible.builtin.file:
+      path: "{{ backup_dir }}"
+      state: directory
+      mode: "0700"
+  tags: [backup]
+
+- name: Backup tenant directory
+  ansible.posix.synchronize:
+      src: "{{ tenant_dir }}/"
+      dest: "{{ backup_dir }}/files/"
+      recursive: true
+      links: true
+  delegate_to: localhost
+  tags: [backup]
+
+- name: Dump tenant database
+  community.mysql.mysql_db:
+      name: "{{ tenant_db }}"
+      state: dump
+      target: "{{ backup_dir }}/database.sql"
+      login_unix_socket: /var/run/mysqld/mysqld.sock
+  tags: [backup]
+
+- name: Compress backup
+  community.general.archive:
+      path: "{{ backup_dir }}"
+      dest: "{{ backup_dir }}.tar.gz"
+      format: gz
+  tags: [backup]
+
+- name: Remove uncompressed backup directory
+  ansible.builtin.file:
+      path: "{{ backup_dir }}"
+      state: absent
+  tags: [backup]

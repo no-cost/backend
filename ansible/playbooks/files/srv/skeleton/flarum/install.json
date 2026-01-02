@@ -1,0 +1,23 @@
+{
+    "debug": false,
+    "baseUrl": "https://{{ tenant_tag }}.{{ main_domain }}",
+    "databaseConfiguration": {
+        "driver": "mysql",
+        "host": "127.0.0.1",
+        "port": 3306,
+        "database": "tenant_{{ tenant_tag }}",
+        "username": "tenant_{{ tenant_tag }}",
+        "password": "{{ tenant_db_password }}",
+        "prefix": ""
+    },
+    "adminUser": {
+        "username": "admin",
+        "password": "{{ tenant_admin_password }}",
+        "email": "{{ tenant_admin_email }}"
+    },
+    "settings": {
+        "forum_title": "{{ tenant_tag | replace('_', ' ') | title }}",
+        "welcome_message": "Welcome to your new forum!"
+    },
+    "extensions": "flarum-approval,flarum-tags"
+}

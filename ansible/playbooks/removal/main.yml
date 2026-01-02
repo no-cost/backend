@@ -1,0 +1,37 @@
+---
+# Main removal playbook for tenant sites
+# Required variables (passed via extravars):
+#   - tenant_tag: unique 4-char identifier
+#   - service_type: flarum|mediawiki|wordpress
+#   - skip_backup: boolean (default false) - set true for GDPR full deletion
+
+- name: Set tenant paths
+  ansible.builtin.set_fact:
+      tenant_dir: "{{ paths.tenants.root }}/{{ tenant_tag }}"
+      tenant_user: "tenant_{{ tenant_tag }}"
+      tenant_db: "tenant_{{ tenant_tag }}"
+      backup_dir: "{{ paths.backup_attic_root }}/{{ tenant_tag }}"
+  tags: [always]
+
+- name: Verify tenant exists
+  ansible.builtin.stat:
+      path: "{{ tenant_dir }}"
+  register: tenant_exists
+  tags: [always]
+
+- name: Fail if tenant does not exist
+  ansible.builtin.fail:
+      msg: "Tenant directory `{{ tenant_dir }}` does not exist!"
+  when: not tenant_exists.stat.exists
+  tags: [always]
+
+# Optional backup
+- name: Backup tenant data
+  ansible.builtin.include_tasks: ./backup.yml
+  when: not (skip_backup | default(false) | bool)
+  tags: [backup]
+
+# Hard delete
+- name: Cleanup tenant resources
+  ansible.builtin.include_tasks: ./cleanup.yml
+  tags: [cleanup]

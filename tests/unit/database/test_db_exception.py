@@ -10,7 +10,7 @@ async def test_db_exception(test_db_session):
         async with test_db_session as session:
             session.add(
                 Site(
-                    id="abc",
+                    tag="abc",
                     hostname="testabc.com",
                     admin_password="test",
                     site_type="flarum",
@@ -22,7 +22,7 @@ async def test_db_exception(test_db_session):
 
             session.add(
                 Site(
-                    id="abc",  # same id
+                    tag="abc",  # same id
                     hostname="testdef.com",
                     admin_password="test",
                     site_type="flarum",

@@ -1,0 +1,40 @@
+---
+# root in /app/
+
+- name: Copy skeleton structure and mount vendor
+  ansible.builtin.include_tasks: ../helpers/copy_structure.yml
+  vars:
+      mount_paths:
+          - "app/vendor"
+          - "app/public/assets/fonts"
+      service_type: "flarum"
+  tags: ["skeleton", "flarum"]
+
+- name: Render install.json template
+  ansible.builtin.template:
+      src: "{{ playbook_dir }}/files/srv/skeleton/flarum/install.json"
+      dest: "/tmp/tenant_{{ tenant_tag }}_install.json"
+      mode: "600"
+  tags: ["skeleton", "flarum"]
+
+- name: Run install command
+  ansible.builtin.command:
+      cmd: |
+          php flarum install --file="/tmp/tenant_{{ tenant_tag }}_install.json"
+      chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app"
+  become: true
+  become_user: "tenant_{{ tenant_tag }}"
+  tags: ["skeleton", "flarum"]
+
+- name: Cleanup install.json template
+  ansible.builtin.file:
+      path: "/tmp/tenant_{{ tenant_tag }}_install.json"
+      state: absent
+  tags: ["skeleton", "flarum"]
+
+- name: Overwrite config.php loader
+  ansible.builtin.copy:
+      src: "{{ playbook_dir }}/files/srv/skeleton/flarum/config.php"
+      dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/config.php"
+      mode: "644"
+  tags: ["skeleton", "flarum"]

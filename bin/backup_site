@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+"""
+CLI script to backup a site.
+
+Usage: backup_site <tenant_tag> <service_type>
+
+Arguments:
+    tenant_tag      Unique identifier for the site
+    service_type    Type of site: flarum, mediawiki, or wordpress
+"""
+
+import argparse
+import asyncio
+import sys
+from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from site_manager import backup_site
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Backup a tenant site")
+    parser.add_argument("tenant_tag", help="Unique identifier for the site")
+    parser.add_argument(
+        "service_type",
+        choices=["flarum", "mediawiki", "wordpress"],
+        help="Type of site",
+    )
+
+    args = parser.parse_args()
+
+    try:
+        asyncio.run(
+            backup_site(
+                tenant_tag=args.tenant_tag,
+                service_type=args.service_type,
+            )
+        )
+        print(f"Site backed up successfully: {args.tenant_tag}")
+    except Exception as e:
+        print(f"Error backing up site: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

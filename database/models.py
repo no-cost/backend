@@ -4,7 +4,6 @@ from sqlalchemy import String, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from settings import Settings
-from utils import random_id
 
 
 class Base(DeclarativeBase):
@@ -14,12 +13,11 @@ class Base(DeclarativeBase):
 class Site(Base):
     __tablename__ = "sites"
 
-    id: Mapped[str] = mapped_column(
-        String(length=4),  # 35^4 = 1500625 possible site combinations
+    tag: Mapped[str] = mapped_column(
+        String(length=32),
         primary_key=True,
         unique=True,
         nullable=False,
-        default=random_id,
     )
 
     # Account
