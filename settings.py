@@ -1,28 +1,23 @@
-from os import getenv
+"""
+Interface for getting settings from environment variables.
+"""
 
+from os import environ
 
-class Settings:
-    """
-    Settings for the service.
-    """
-
-    AVAILABLE_SITE_TYPES = [
-        "flarum",
-        "wordpress",
-        "mediawiki",
-    ]
-    """The site types that are available to be created."""
-
-    ALLOWED_DOMAINS = getenv(
-        "ALLOWED_DOMAINS", "no-cost.site,no-cost.forum,no-cost.wiki"
-    ).split(",")
-    """The domains allowed for site creation (user chooses on signup)."""
-
-    DATABASE_URL = getenv("DATABASE_URL", "sqlite:///database.sqlite")
-    """The database URL to use for the service."""
-
-    ENVIRONMENT = getenv("ENVIRONMENT", "dev")
-    """The environment (dev or prod)."""
-
-    PERKS_DONATION_AMOUNT = 7
-    """The amount of donations required to have perks (such as the footer removed)."""
+allowed_domains = environ["ALLOWED_DOMAINS"].split(",")
+VARS = {
+    "database_url": environ["DATABASE_URL"],
+    "environment": environ["ENVIRONMENT"],
+    "allowed_domains": allowed_domains,
+    "main_domain": allowed_domains[0],
+    "php_version": environ["PHP_VERSION"],
+    "available_site_types": ["flarum", "mediawiki", "wordpress"],
+    "paths": {
+        "tenants": {
+            "root": environ["TENANTS_ROOT"],
+            "skeleton_root": environ["SKELETON_ROOT"],
+        },
+        "backup_root": environ["BACKUP_ROOT"],
+        "backup_attic_root": environ["BACKUP_ATTIC_ROOT"],
+    },
+}

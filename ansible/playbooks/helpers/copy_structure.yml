@@ -1,12 +1,10 @@
 ---
 # Helper to sync/mirror the directory structure of a skeleton
-# Used by: flarum.yml, mediawiki.yml, wordpress.yml
 # Params:
 #   - mount_paths: array of paths to bind-mount (read-only), empty for none
 #   - exclude_paths: array of paths to exclude from sync (in addition to mount_paths)
 #   - service_type: flarum|mediawiki|wordpress
 
-# Sync skeleton
 - name: Build exclude list for rsync
   ansible.builtin.set_fact:
       rsync_excludes: "{{
@@ -57,7 +55,6 @@
       loop_var: root_tenant_dir
   tags: [always]
 
-# Bind mounts
 - name: Ensure mount points for directories exist
   ansible.builtin.file:
       path: "{{ paths.tenants.root }}/{{ tenant_tag }}/{{ mount_dir_raw }}"

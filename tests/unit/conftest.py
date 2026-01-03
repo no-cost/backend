@@ -1,8 +1,22 @@
+"""
+Fixtures for unit tests, stuff like setting up the DB, cleanup, etc...
+"""
+
+import os
+os.environ.setdefault("ALLOWED_DOMAINS", "test.local,test2.local")
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///test_database.sqlite")
+os.environ.setdefault("ENVIRONMENT", "test")
+os.environ.setdefault("PHP_VERSION", "8.3")
+os.environ.setdefault("TENANTS_ROOT", "/tmp/test_tenants")
+os.environ.setdefault("SKELETON_ROOT", "/tmp/test_skeleton")
+os.environ.setdefault("BACKUP_ROOT", "/tmp/test_backups")
+os.environ.setdefault("BACKUP_ATTIC_ROOT", "/tmp/test_backup_attic")
+
 from contextlib import asynccontextmanager
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from database.models import Base
 from database.session import get_session

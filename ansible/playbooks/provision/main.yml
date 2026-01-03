@@ -53,6 +53,24 @@
       mode: "644"
   tags: [always]
 
+- name: Ensure mount points for libs exists
+  ansible.builtin.file:
+      path: "{{ paths.tenants.root }}/{{ tenant_tag }}/usr/lib"
+      state: directory
+      owner: "tenant_{{ tenant_tag }}"
+      group: "tenant_{{ tenant_tag }}"
+      mode: "755"
+  tags: [always]
+
+- name: Mount libs
+  ansible.posix.mount:
+      src: "{{ paths.tenants.skeleton_root }}/{{ service_type }}/usr/lib"
+      path: "{{ paths.tenants.root }}/{{ tenant_tag }}/usr/lib"
+      opts: ro,bind
+      state: mounted
+      fstype: none
+  tags: [always]
+
 - name: "Deploy {{ service_type }}"
   ansible.builtin.include_tasks: "./{{ service_type }}.yml"
   tags: [always]

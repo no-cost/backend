@@ -3,8 +3,6 @@ from datetime import datetime
 from sqlalchemy import String, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from settings import Settings
-
 
 class Base(DeclarativeBase):
     pass
@@ -20,19 +18,18 @@ class Site(Base):
         nullable=False,
     )
 
-    # Account
+    # account
     admin_email: Mapped[str] = mapped_column(String(length=255), nullable=False)
     admin_password: Mapped[str] = mapped_column(
         String(length=72), nullable=False  # bcrypt
     )
 
-    # Config
+    # config
     site_type: Mapped[str] = mapped_column(String(length=30), nullable=False)
     hostname: Mapped[str] = mapped_column(String(length=255), nullable=True)
-    chroot_dir: Mapped[str] = mapped_column(String(length=255), nullable=False)
-    installed_at: Mapped[datetime] = mapped_column(nullable=True)
+    installed_at: Mapped[datetime] = mapped_column(nullable=True, default=datetime.now)
 
-    # Removal
+    # removal
     removal_reason: Mapped[str] = mapped_column(String(length=255), nullable=True)
     removed_at: Mapped[datetime] = mapped_column(nullable=True)
     removed_ip: Mapped[str] = mapped_column(String(length=45), nullable=True)
@@ -42,11 +39,11 @@ class Site(Base):
     last_login_ip: Mapped[str] = mapped_column(String(length=45), nullable=True)
     last_login_at: Mapped[datetime] = mapped_column(nullable=True)
 
-    # Misc
+    # misc
     donated_amount: Mapped[float] = mapped_column(nullable=True)
     """Donations are per site, in EUR"""
 
-    # Timestamps
+    # timestamps
     created_at: Mapped[datetime] = mapped_column(
         nullable=False,
         server_default=func.current_timestamp(),
@@ -69,11 +66,8 @@ class Site(Base):
 
     def is_donor(self) -> bool:
         """Returns whether the site admin has donated"""
-        return self.donated_amount is not None and self.donated_amount > 0
+        return self.donated_amount is not None and self.donated_amount > 0.0
 
     def has_perks(self) -> bool:
         """Returns whether the site admin has donated enough to have perks (such as the footer removed)"""
-        return (
-            self.donated_amount is not None
-            and self.donated_amount >= Settings.PERKS_DONATION_AMOUNT
-        )
+        return self.donated_amount is not None and self.donated_amount >= 7.0

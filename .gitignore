@@ -6,5 +6,5 @@ __pycache__/
 .coverage
 htmlcov/
 
-.env*
+.env
 *.sqlite

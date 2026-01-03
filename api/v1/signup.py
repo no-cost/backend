@@ -8,13 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Site
 from database.session import get_session
-from settings import Settings
+from settings import VARS
 from site_manager import install_site
 
 V1_SIGNUP = fa.APIRouter(prefix="/signup", tags=["signup"])
 
 
 class SignupRequest(BaseModel):
+    tag: str
     email: EmailStr
     password: str
     site_type: str
@@ -38,44 +39,34 @@ async def signup(
 
     The site installation happens in the background after the response is sent.
     """
-    # Validate site type
-    if request.site_type not in Settings.AVAILABLE_SITE_TYPES:
+
+    if request.site_type not in VARS["available_site_types"]:
         raise fa.HTTPException(
             status_code=400,
-            detail=f"Invalid site type. Available: {Settings.AVAILABLE_SITE_TYPES}",
+            detail="Invalid site type.",
         )
 
-    # Validate parent domain
-    if request.parent_domain not in Settings.ALLOWED_DOMAINS:
+    if request.parent_domain not in VARS["allowed_domains"]:
         raise fa.HTTPException(
             status_code=400,
-            detail=f"Invalid parent domain. Available: {Settings.ALLOWED_DOMAINS}",
+            detail="Invalid parent domain.",
         )
 
-    # Hash the password
     hashed_password = bcrypt.hashpw(
         request.password.encode("utf-8"), bcrypt.gensalt()
     ).decode("utf-8")
 
-    # Create the site record (ID is auto-generated)
     site = Site(
+        tag=request.tag,
         admin_email=request.email,
         admin_password=hashed_password,
         site_type=request.site_type,
-        hostname=None,  # Will be set after installation
-        chroot_dir="",  # Will be set after installation
+        hostname=f"{request.tag}.{request.parent_domain}",
     )
 
     db.add(site)
     await db.commit()
-    await db.refresh(site)
 
-    # Set hostname based on generated ID
-    site.hostname = f"{site.tag}.{request.parent_domain}"
-    site.chroot_dir = f"/srv/host/{site.tag}"
-    await db.commit()
-
-    # Install site in background
     background_tasks.add_task(install_site, site)
 
     return SignupResponse(

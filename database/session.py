@@ -1,5 +1,6 @@
 import os
-import typing as t
+from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
 
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -7,22 +8,22 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-type AsyncSessionContext = t.AsyncContextManager[AsyncSession]
-
 engine = create_async_engine(
     os.getenv("DATABASE_URL", "sqlite+aiosqlite:///database.sqlite"),
     pool_size=20,
     max_overflow=0,
     echo=False,
 )
-async_session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+async_session_factory = async_sessionmaker[AsyncSession](
+    bind=engine, expire_on_commit=False
+)
 
 
-async def get_session() -> t.AsyncGenerator[AsyncSession, None]:  # pragma: no cover
-    try:
-        async with async_session_factory() as session:
+@asynccontextmanager
+async def get_session() -> AsyncIterator[AsyncSession]:  # pragma: no cover
+    async with async_session_factory() as session:
+        try:
             yield session
-    except Exception as e:
-        await session.rollback()
-        await session.close()
-        raise e
+        except Exception:
+            await session.rollback()
+            raise
