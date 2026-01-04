@@ -3,13 +3,12 @@ Lower-level Ansible wrapper for tenant lifecycle management.
 """
 
 from os import environ
-
-import ansible_runner
 from pathlib import Path
 from typing import Any
 
-from settings import VARS
+import ansible_runner
 
+from settings import VARS
 
 ANSIBLE_ROOT = Path(__file__).parent.parent / "ansible"
 PLAYBOOKS_ROOT = ANSIBLE_ROOT / "playbooks"
@@ -27,15 +26,15 @@ def run_playbook(
 
     all_vars = VARS.copy()
     all_vars.update(extravars)
+    all_vars["ansible_connection"] = "local"
 
-    cmdline = "--connection=local -i localhost,"
-    if tags:
-        cmdline += f" --tags {tags}"
+    cmdline = f"--tags {tags}" if tags else None
     # paths must be str
     result = ansible_runner.run(
         private_data_dir=str(ANSIBLE_ROOT),
         project_dir=str(PLAYBOOKS_ROOT),
         playbook=playbook_path,  # relative to project_dir
+        inventory="localhost,",
         extravars=all_vars,
         envvars={"PATH": environ["PATH"]},
         cmdline=cmdline,
