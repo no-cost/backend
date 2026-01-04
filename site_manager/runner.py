@@ -60,7 +60,7 @@ async def provision_tenant(
 
     return run_playbook(
         "provision/main.yml",
-        {
+        extravars={
             "tenant_tag": tenant_tag,
             "service_type": service_type,
             "tenant_admin_email": admin_email,
@@ -80,7 +80,7 @@ async def remove_tenant(
 
     return run_playbook(
         "removal/main.yml",
-        {
+        extravars={
             "tenant_tag": tenant_tag,
             "service_type": service_type,
             "skip_backup": skip_backup,
