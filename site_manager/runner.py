@@ -35,6 +35,7 @@ def run_playbook(
         envvars=dict[str, str](environ),
         tags=tags,
         quiet=quiet,
+        runner_mode="subprocess",
     )
     rc.prepare()
 
