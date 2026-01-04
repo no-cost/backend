@@ -6,7 +6,6 @@
   vars:
       mount_paths:
           - "app/vendor"
-          - "app/public/assets/fonts"
       service_type: "flarum"
   tags: ["skeleton", "flarum"]
 
