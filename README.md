@@ -19,10 +19,22 @@ pip install -r requirements.txt
 # modify env as needed
 cp .envrc.template .envrc
 
+# run tests
+pytest
+
 # prepare db and run dev server
 alembic upgrade head
 fastapi dev
 ```
+
+## Coverage
+
+```bash
+pip install pytest-cov
+pytest --cov=./ --cov-report=html
+```
+
+then see [`htmlcov/index.html`](./htmlcov/index.html)
 
 ## Production deployment
 

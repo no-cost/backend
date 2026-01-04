@@ -1,7 +1,4 @@
-from datetime import datetime
-
 from database.models import Site
-from database.session import get_session
 from site_manager.runner import (
     backup_tenant,
     provision_tenant,
@@ -9,7 +6,7 @@ from site_manager.runner import (
 )
 
 
-async def create_site(
+async def provision_site(
     site: Site,
     force: bool = False,
 ) -> None:
@@ -23,10 +20,6 @@ async def create_site(
         admin_email=site.admin_email,
         force=force,
     )
-
-    async with get_session() as session:
-        session.add(site)
-        await session.commit()
 
 
 async def remove_site(
@@ -43,15 +36,6 @@ async def remove_site(
         service_type=site.site_type,
         skip_backup=skip_backup,
     )
-
-    async with get_session() as session:
-        site.removed_at = datetime.now()
-        site.removal_reason = reason or (
-            "User requested" if skip_backup else "Archived for inactivity"
-        )
-
-        session.add(site)
-        await session.commit()
 
 
 async def backup_site(

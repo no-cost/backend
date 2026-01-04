@@ -15,19 +15,17 @@ async def test_db_exception(test_db_session):
                     admin_password="test",
                     site_type="flarum",
                     admin_email="abc@test.com",
-                    chroot_dir="/tmp/abc",
                 )
             )
             await session.commit()
 
             session.add(
                 Site(
-                    tag="abc",  # same id
+                    tag="abc",  # same tag
                     hostname="testdef.com",
                     admin_password="test",
                     site_type="flarum",
                     admin_email="def@test.com",
-                    chroot_dir="/tmp/def",
                 )
             )
             await session.commit()  # IntegrityError

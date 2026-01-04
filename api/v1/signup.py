@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import Site
 from database.session import get_session
 from settings import VARS
-from site_manager import install_site
+from site_manager import provision_site
 
 V1_SIGNUP = fa.APIRouter(prefix="/signup", tags=["signup"])
 
@@ -24,7 +24,7 @@ class SignupRequest(BaseModel):
 
 class SignupResponse(BaseModel):
     message: str
-    site_id: str
+    site_tag: str
     hostname: str
 
 
@@ -64,13 +64,13 @@ async def signup(
         hostname=f"{request.tag}.{request.parent_domain}",
     )
 
+    background_tasks.add_task(provision_site, site)
+
     db.add(site)
     await db.commit()
 
-    background_tasks.add_task(install_site, site)
-
     return SignupResponse(
-        message="Site created. Installation in progress.",
+        message="Site created. You will receive an email when it is installed and ready to use.",
         site_tag=site.tag,
         hostname=site.hostname,
     )

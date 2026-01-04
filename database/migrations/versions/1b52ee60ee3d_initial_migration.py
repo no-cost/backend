@@ -25,7 +25,6 @@ def upgrade() -> None:
         sa.Column("admin_password", sa.String(length=72), nullable=False),
         sa.Column("site_type", sa.String(length=30), nullable=False),
         sa.Column("hostname", sa.String(length=255), nullable=True),
-        sa.Column("chroot_dir", sa.String(length=255), nullable=False),
         sa.Column("installed_at", sa.DateTime(), nullable=True),
         sa.Column("removal_reason", sa.String(length=255), nullable=True),
         sa.Column("removed_at", sa.DateTime(), nullable=True),
