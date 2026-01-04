@@ -1,5 +1,4 @@
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
 from os import environ
 
 from sqlalchemy.ext.asyncio import (
@@ -19,7 +18,6 @@ async_session_factory = async_sessionmaker[AsyncSession](
 )
 
 
-@asynccontextmanager
 async def get_session() -> AsyncIterator[AsyncSession]:  # pragma: no cover
     async with async_session_factory() as session:
         try:
