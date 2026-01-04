@@ -15,7 +15,6 @@
           - "app/public/tests"
           - "app/public/README.md"
       service_type: "mediawiki"
-  tags: ["skeleton", "mediawiki"]
 
 - name: Run MediaWiki installation script
   ansible.builtin.shell:
@@ -32,19 +31,19 @@
           "Admin"
       chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public"
   changed_when: true
-  tags: ["skeleton", "mediawiki"]
+  tags: [always]
 
 - name: Render LocalSettings.php template
   ansible.builtin.template:
       src: "{{ playbook_dir }}/files/srv/skeleton/mediawiki/LocalSettings.php"
       dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public/LocalSettings.php"
       mode: "600"
-  tags: ["skeleton", "mediawiki"]
+  tags: [always]
 
 - name: Generate temporary password for admin
   ansible.builtin.set_fact:
       _mw_temp_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=16') }}"
-  tags: ["skeleton", "mediawiki"]
+  tags: [always]
 
 - name: Set temporary password in database
   community.mysql.mysql_query:
@@ -57,7 +56,7 @@
           WHERE user_name = 'Admin'
       positional_args:
           - "{{ _mw_temp_password }}"
-  tags: ["skeleton", "mediawiki"]
+  tags: [always]
 
 - name: Send welcome email
   community.general.mail:
@@ -80,4 +79,4 @@
           If you have any questions, please let us know by replying to this e-mail.
       from: "noreply@{{ main_domain }}"
   failed_when: false
-  tags: ["skeleton", "mediawiki"]
+  tags: [always]

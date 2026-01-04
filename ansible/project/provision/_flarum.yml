@@ -7,7 +7,7 @@
       mount_paths:
           - "app/vendor"
       service_type: "flarum"
-  tags: ["skeleton", "flarum"]
+  tags: [always]
 
 # just so that the initial table migrations can run
 - name: Render install.json template
@@ -17,7 +17,7 @@
       owner: "tenant_{{ tenant_tag }}"
       group: "tenant_{{ tenant_tag }}"
       mode: "640"
-  tags: ["skeleton", "flarum"]
+  tags: [always]
 
 - name: Run install command
   ansible.builtin.command:
@@ -26,13 +26,13 @@
       chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app"
   become: true
   become_user: "tenant_{{ tenant_tag }}"
-  tags: ["skeleton", "flarum"]
+  tags: [always]
 
 - name: Cleanup install.json template
   ansible.builtin.file:
       path: "/tmp/tenant_{{ tenant_tag }}_install.json"
       state: absent
-  tags: ["skeleton", "flarum"]
+  tags: [always]
 
 # will overwrite what was set up by the install script
 - name: Overwrite config.php loader
@@ -40,12 +40,12 @@
       src: "{{ playbook_dir }}/files/srv/skeleton/flarum/config.php"
       dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/config.php"
       mode: "644"
-  tags: ["skeleton", "flarum"]
+  tags: [always]
 
 - name: Generate password reset token for admin
   ansible.builtin.set_fact:
       _flarum_reset_token: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=40') }}"
-  tags: ["skeleton", "flarum"]
+  tags: [always]
 
 - name: Insert password reset token into database
   community.mysql.mysql_query:
@@ -56,7 +56,7 @@
           VALUES (%s, 1, NOW())
       positional_args:
           - "{{ _flarum_reset_token }}"
-  tags: ["skeleton", "flarum"]
+  tags: [always]
 
 - name: Send welcome email
   community.general.mail:
@@ -74,4 +74,4 @@
           If you have any questions, please let us know by replying to this e-mail.
       from: "noreply@{{ main_domain }}"
   failed_when: false
-  tags: ["skeleton", "flarum"]
+  tags: [always]
