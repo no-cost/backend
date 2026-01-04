@@ -31,8 +31,8 @@ def run_playbook(
     if tags:
         cmdline += f" --tags {tags}"
     result = ansible_runner.run(
-        private_data_dir=ANSIBLE_ROOT,
-        playbook=PLAYBOOKS_ROOT / playbook_path,
+        private_data_dir=str(ANSIBLE_ROOT),  # path must be str
+        playbook=str(PLAYBOOKS_ROOT / playbook_path),
         extravars=all_vars,
         cmdline=cmdline,
         quiet=quiet,
