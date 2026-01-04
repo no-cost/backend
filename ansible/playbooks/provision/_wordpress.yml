@@ -39,7 +39,7 @@
           --url='https://{{ tenant_tag }}.{{ main_domain }}'
           --title='{{ tenant_tag | replace("_", " ") | title }}'
           --admin_user='admin'
-          --admin_password='{{ tenant_admin_password }}'
+          --admin_password='{{ lookup('password', '/dev/null chars=hexdigits length=32') }}'
           --admin_email='{{ tenant_admin_email }}'
           --skip-email
       chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public"

@@ -1,11 +1,9 @@
 ---
-# Main provision playbook for tenant sites
-# Params:
-#   - tenant_tag: unique 4-char identifier
+#   - tenant_tag
 #   - service_type: flarum|mediawiki|wordpress
-#   - tenant_admin_email: admin email address
-#   - tenant_admin_password: admin password (hashed for some services)
-#   - tenant_db_password: database password
+#   - tenant_admin_email
+#   - tenant_db_password
+#   - force: boolean (default false)
 
 - name: Check if tenant already exists
   ansible.builtin.stat:
@@ -13,7 +11,7 @@
   register: tenant_exists
   tags: [always]
 
-- name: Fail if tenant already exists
+- name: Fail if tenant already exists and force is not set
   ansible.builtin.fail:
       msg: "Tenant directory `{{ paths.tenants.root }}/{{ tenant_tag }}` already exists!"
   when: not force | default(false) and tenant_exists.stat.exists
@@ -72,7 +70,7 @@
   tags: [always]
 
 - name: "Deploy {{ service_type }}"
-  ansible.builtin.include_tasks: "./{{ service_type }}.yml"
+  ansible.builtin.include_tasks: "./_{{ service_type }}.yml"
   tags: [always]
 
 - name: Render config.json template with tenant information

@@ -12,7 +12,7 @@
     },
     "adminUser": {
         "username": "admin",
-        "password": "{{ tenant_admin_password }}",
+        "password": "{{ lookup('password', '/dev/null chars=hexdigits length=32') }}",
         "email": "{{ tenant_admin_email }}"
     },
     "settings": {

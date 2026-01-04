@@ -1,9 +1,9 @@
 ---
-# Helper to sync/mirror the directory structure of a skeleton
-# Params:
+# helper to sync/mirror the directory structure of a skeleton
+#
 #   - mount_paths: array of paths to bind-mount (read-only), empty for none
-#   - exclude_paths: array of paths to exclude from sync (in addition to mount_paths)
-#   - service_type: flarum|mediawiki|wordpress
+#   - exclude_paths: array of paths to exclude from sync completely
+#   - service_type: flarum|mediawiki|wordpress (to determine skeleton dir)
 
 - name: Build exclude list for rsync
   ansible.builtin.set_fact:

@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from utils import random_string
 from database.models import Site
 from database.session import get_session
 from site_manager.runner import (
