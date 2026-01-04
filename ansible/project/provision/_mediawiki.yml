@@ -15,6 +15,7 @@
           - "app/public/tests"
           - "app/public/README.md"
       service_type: "mediawiki"
+  tags: [always]
 
 - name: Run MediaWiki installation script
   ansible.builtin.shell:
