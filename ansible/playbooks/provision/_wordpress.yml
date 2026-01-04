@@ -63,3 +63,31 @@
       dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public/wp-config.php"
       mode: "644"
   tags: ["skeleton", "wordpress"]
+
+- name: Generate password reset key for admin
+  ansible.builtin.command:
+      cmd: wp user reset-password admin --skip-email --porcelain
+      chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public"
+  become: true
+  become_user: "tenant_{{ tenant_tag }}"
+  register: _wp_reset_result
+  changed_when: true
+  tags: ["skeleton", "wordpress"]
+
+- name: Send welcome email
+  community.general.mail:
+      host: "127.0.0.1"
+      to: "{{ tenant_admin_email }}"
+      subject: "Welcome to no-cost.site!"
+      body: |
+          Your WordPress site has been provisioned successfully!
+
+          Domain: https://{{ tenant_tag }}.{{ main_domain }}
+
+          To set your admin password, visit the following link:
+          https://{{ tenant_tag }}.{{ main_domain }}/wp-login.php?action=rp&key={{ _wp_reset_result.stdout | trim }}&login=admin
+
+          If you have any questions, please let us know by replying to this e-mail.
+      from: "noreply@{{ main_domain }}"
+  failed_when: false
+  tags: ["skeleton", "wordpress"]

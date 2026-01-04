@@ -82,21 +82,7 @@
       mode: "640"
   tags: [always]
 
-- name: Send welcome email
-  community.general.mail:
-      host: "127.0.0.1"
-      to: "{{ tenant_admin_email }}"
-      subject: "Welcome to no-cost.site!"
-      body: |
-          Your site instance has been provisioned successfully!
-
-          Domain: {{ tenant_tag }}.{{ main_domain }}
-          Service: {{ service_type | capitalize }}
-
-          If you have any questions, please let us know by replying to this e-mail.
-      from: "noreply@{{ main_domain }}"
-  failed_when: false
-  tags: [always]
+# todo also write hostname to nginx map
 
 - name: Reload services
   ansible.builtin.systemd:

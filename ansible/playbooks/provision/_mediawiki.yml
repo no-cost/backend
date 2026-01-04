@@ -40,3 +40,44 @@
       dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public/LocalSettings.php"
       mode: "600"
   tags: ["skeleton", "mediawiki"]
+
+- name: Generate temporary password for admin
+  ansible.builtin.set_fact:
+      _mw_temp_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=16') }}"
+  tags: ["skeleton", "mediawiki"]
+
+- name: Set temporary password in database
+  community.mysql.mysql_query:
+      login_unix_socket: /var/run/mysqld/mysqld.sock
+      login_db: "tenant_{{ tenant_tag }}"
+      query: |
+          UPDATE user
+          SET user_newpassword = CONCAT(':B:1234:', MD5(CONCAT('1234-', MD5(%s)))),
+              user_newpass_time = DATE_FORMAT(NOW(), '%%Y%%m%%d%%H%%i%%s')
+          WHERE user_name = 'Admin'
+      positional_args:
+          - "{{ _mw_temp_password }}"
+  tags: ["skeleton", "mediawiki"]
+
+- name: Send welcome email
+  community.general.mail:
+      host: "127.0.0.1"
+      to: "{{ tenant_admin_email }}"
+      subject: "Welcome to no-cost.site!"
+      body: |
+          Your MediaWiki site has been provisioned successfully!
+
+          Domain: https://{{ tenant_tag }}.{{ main_domain }}
+
+          To log in, visit the following link:
+          https://{{ tenant_tag }}.{{ main_domain }}/index.php?title=Special:UserLogin
+
+          Username: Admin
+          Temporary password: {{ _mw_temp_password }}
+
+          You will be prompted to set a new password after logging in.
+
+          If you have any questions, please let us know by replying to this e-mail.
+      from: "noreply@{{ main_domain }}"
+  failed_when: false
+  tags: ["skeleton", "mediawiki"]

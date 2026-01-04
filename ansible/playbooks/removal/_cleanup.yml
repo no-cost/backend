@@ -7,21 +7,12 @@
 #   - tenant_db
 #   - backup_dir
 
-# Step 1: Stop PHP-FPM pool to release file handles
-- name: Stop PHP-FPM service temporarily
-  ansible.builtin.systemd:
-      name: "php{{ php_version }}-fpm"
-      state: stopped
-  tags: [cleanup]
-
-# Step 2: Remove PHP-FPM pool configuration
 - name: Remove PHP-FPM pool config
   ansible.builtin.file:
       path: "/etc/php/fpm/pool.d/{{ tenant_tag }}.conf"
       state: absent
   tags: [cleanup]
 
-# Step 3: Unmount all bind mounts for this tenant
 - name: Find all bind mounts for tenant
   ansible.builtin.shell:
       cmd: |
@@ -31,17 +22,8 @@
   failed_when: false
   tags: [cleanup]
 
+# also umounts from fstab
 - name: Unmount tenant bind mounts
-  ansible.posix.mount:
-      path: "{{ mount_path }}"
-      state: unmounted
-  loop: "{{ tenant_mounts.stdout_lines | default([]) }}"
-  loop_control:
-      loop_var: mount_path
-  when: tenant_mounts.stdout_lines | length > 0
-  tags: [cleanup]
-
-- name: Remove mount entries from fstab
   ansible.posix.mount:
       path: "{{ mount_path }}"
       state: absent
@@ -51,14 +33,12 @@
   when: tenant_mounts.stdout_lines | length > 0
   tags: [cleanup]
 
-# Step 4: Remove tenant directory
 - name: Remove tenant directory
   ansible.builtin.file:
       path: "{{ tenant_dir }}"
       state: absent
   tags: [cleanup]
 
-# Step 5: Drop MySQL database
 - name: Drop tenant database
   community.mysql.mysql_db:
       name: "{{ tenant_db }}"
@@ -66,7 +46,6 @@
       login_unix_socket: /var/run/mysqld/mysqld.sock
   tags: [cleanup]
 
-# Step 6: Remove MySQL user
 - name: Remove tenant database user
   community.mysql.mysql_user:
       name: "{{ tenant_db }}"
@@ -75,7 +54,6 @@
       login_unix_socket: /var/run/mysqld/mysqld.sock
   tags: [cleanup]
 
-# Step 7: Remove Linux user
 - name: Remove tenant Linux user
   ansible.builtin.user:
       name: "{{ tenant_user }}"
@@ -83,16 +61,16 @@
       remove: true
   tags: [cleanup]
 
-# Step 8: Restart PHP-FPM
-- name: Start PHP-FPM service
+- name: Reload PHP-FPM service
   ansible.builtin.systemd:
       name: "php{{ php_version }}-fpm"
-      state: started
+      state: reloaded
   tags: [cleanup]
 
-# Step 9: Reload nginx
+# todo also remove hostname from nginx map
+
 - name: Reload nginx
   ansible.builtin.systemd:
-      name: nginx
+      name: "nginx"
       state: reloaded
   tags: [cleanup]

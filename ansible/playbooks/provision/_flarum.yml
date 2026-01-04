@@ -38,3 +38,37 @@
       dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/config.php"
       mode: "644"
   tags: ["skeleton", "flarum"]
+
+- name: Generate password reset token for admin
+  ansible.builtin.set_fact:
+      _flarum_reset_token: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=40') }}"
+  tags: ["skeleton", "flarum"]
+
+- name: Insert password reset token into database
+  community.mysql.mysql_query:
+      login_unix_socket: /var/run/mysqld/mysqld.sock
+      login_db: "tenant_{{ tenant_tag }}"
+      query: |
+          INSERT INTO password_tokens (id, user_id, created_at)
+          VALUES (%s, 1, NOW())
+      positional_args:
+          - "{{ _flarum_reset_token }}"
+  tags: ["skeleton", "flarum"]
+
+- name: Send welcome email
+  community.general.mail:
+      host: "127.0.0.1"
+      to: "{{ tenant_admin_email }}"
+      subject: "Welcome to no-cost.site!"
+      body: |
+          Your Flarum forum has been provisioned successfully!
+
+          Domain: https://{{ tenant_tag }}.{{ main_domain }}
+
+          To set your admin password, visit the following link:
+          https://{{ tenant_tag }}.{{ main_domain }}/reset/{{ _flarum_reset_token }}
+
+          If you have any questions, please let us know by replying to this e-mail.
+      from: "noreply@{{ main_domain }}"
+  failed_when: false
+  tags: ["skeleton", "flarum"]
