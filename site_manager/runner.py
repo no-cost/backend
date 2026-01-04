@@ -8,7 +8,7 @@ from typing import Any
 
 from ansible_runner import Runner, RunnerConfig
 
-from settings import VARS, VENV_DIR
+from settings import VARS
 
 ANSIBLE_ROOT = Path(__file__).parent.parent / "ansible"
 
@@ -25,9 +25,6 @@ def run_playbook(
 
     all_vars = VARS.copy()
     all_vars.update(extravars)
-    all_vars["ansible_shell_executable"] = "/bin/bash"
-    all_vars["ansible_local_tmp"] = "/tmp/.ansible/tmp"
-    all_vars["ansible_python_interpreter"] = f"{VENV_DIR}/bin/python"
 
     rc = RunnerConfig(
         private_data_dir=str(ANSIBLE_ROOT),
