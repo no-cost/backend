@@ -2,10 +2,13 @@
   "tag": "{{ tenant_tag }}",
   "debug": false,
   "database": {
+    "driver": "mysql",
     "host": "127.0.0.1",
+    "port": 3306,
     "database": "tenant_{{ tenant_tag }}",
     "username": "tenant_{{ tenant_tag }}",
-    "password": "{{ _tenant_db_password }}"
+    "password": "{{ _tenant_db_password }}",
+    "prefix": ""
   },
   "url": "https://{{ tenant_tag }}.{{ main_domain }}"
 }
