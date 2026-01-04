@@ -40,10 +40,7 @@ def run_playbook(
 
     if result.status != "successful":
         raise AnsibleError(
-            f"Playbook {playbook_path} failed with status: {result.status}",
-            status=result.status,
-            rc=result.rc,
-            stats=result.stats,
+            f"Playbook {playbook_path} failed with status: {result.status}. rc: {result.rc}, stats: {result.stats}",
         )
 
     return result
