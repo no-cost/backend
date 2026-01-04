@@ -70,13 +70,21 @@
         mode: "755"
       tags: [always]
 
-    - name: Mount libs
+    - name: Ensure fstab entry for libs
       ansible.posix.mount:
         src: "{{ paths.tenants.skeleton_root }}/{{ service_type }}/usr/lib"
         path: "{{ paths.tenants.root }}/{{ tenant_tag }}/usr/lib"
         opts: ro,bind
-        state: mounted
+        state: present
         fstype: none
+      tags: [always]
+
+    - name: Mount libs
+      ansible.builtin.command:
+        cmd: "mount {{ paths.tenants.root }}/{{ tenant_tag }}/usr/lib"
+      register: mount_libs_result
+      changed_when: mount_libs_result.rc == 0
+      failed_when: mount_libs_result.rc != 0 and 'already mounted' not in mount_libs_result.stderr
       tags: [always]
 
     - name: "Deploy {{ service_type }}"

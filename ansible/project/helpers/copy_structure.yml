@@ -68,15 +68,27 @@
   failed_when: false
   tags: [always]
 
-- name: Mount directories as read-only bind mounts
+# HACK: the posix.mount module has problems with --bind mounts
+# https://github.com/ansible/ansible/issues/7121
+- name: Ensure fstab entries for bind mounts
   ansible.posix.mount:
       src: "{{ paths.tenants.skeleton_root }}/{{ service_type }}/{{ mount_dir_rel }}"
       path: "{{ paths.tenants.root }}/{{ tenant_tag }}/{{ mount_dir_rel }}"
       opts: ro,bind
-      state: mounted
+      state: present
       fstype: none
-  become: true
   loop: "{{ mount_paths | default([]) }}"
   loop_control:
       loop_var: mount_dir_rel
+  tags: [always]
+
+- name: Mount bind mounts
+  ansible.builtin.command:
+      cmd: "mount {{ paths.tenants.root }}/{{ tenant_tag }}/{{ mount_dir_rel }}"
+  loop: "{{ mount_paths | default([]) }}"
+  loop_control:
+      loop_var: mount_dir_rel
+  register: mount_result
+  changed_when: mount_result.rc == 0
+  failed_when: mount_result.rc != 0 and 'already mounted' not in mount_result.stderr
   tags: [always]
