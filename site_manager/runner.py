@@ -2,12 +2,13 @@
 Lower-level Ansible wrapper for tenant lifecycle management.
 """
 
+from os import environ
+
 import ansible_runner
 from pathlib import Path
 from typing import Any
 
 from settings import VARS
-from utils import random_string
 
 
 ANSIBLE_ROOT = Path(__file__).parent.parent / "ansible"
@@ -34,6 +35,7 @@ def run_playbook(
         private_data_dir=str(ANSIBLE_ROOT),  # path must be str
         playbook=str(PLAYBOOKS_ROOT / playbook_path),
         extravars=all_vars,
+        envvars={"PATH": environ["PATH"]},
         cmdline=cmdline,
         quiet=quiet,
     )
