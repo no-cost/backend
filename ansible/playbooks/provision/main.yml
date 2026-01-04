@@ -2,8 +2,12 @@
 #   - tenant_tag
 #   - service_type: flarum|mediawiki|wordpress
 #   - tenant_admin_email
-#   - tenant_db_password
 #   - force: boolean (default false)
+
+- name: Generate tenant database password
+  ansible.builtin.set_fact:
+      _tenant_db_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=32') }}"
+  tags: [always]
 
 - name: Check if tenant already exists
   ansible.builtin.stat:
@@ -36,7 +40,7 @@
 - name: Create database user for tenant
   community.mysql.mysql_user:
       name: "tenant_{{ tenant_tag }}"
-      password: "{{ tenant_db_password }}"
+      password: "{{ _tenant_db_password }}"
       priv: "tenant_{{ tenant_tag }}.*:ALL"
       host: 127.0.0.1
       login_unix_socket: /var/run/mysqld/mysqld.sock

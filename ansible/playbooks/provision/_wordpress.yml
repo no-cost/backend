@@ -23,7 +23,7 @@
           wp config create
           --dbname='tenant_{{ tenant_tag }}'
           --dbuser='tenant_{{ tenant_tag }}'
-          --dbpass='{{ tenant_db_password }}'
+          --dbpass='{{ _tenant_db_password }}'
           --dbhost='127.0.0.1'
           --locale='en_US'
       chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public"

@@ -10,6 +10,7 @@
       service_type: "flarum"
   tags: ["skeleton", "flarum"]
 
+# just so that the initial table migrations can run
 - name: Render install.json template
   ansible.builtin.template:
       src: "{{ playbook_dir }}/files/srv/skeleton/flarum/install.json"
@@ -32,6 +33,7 @@
       state: absent
   tags: ["skeleton", "flarum"]
 
+# will overwrite what was set up by the install script
 - name: Overwrite config.php loader
   ansible.builtin.copy:
       src: "{{ playbook_dir }}/files/srv/skeleton/flarum/config.php"

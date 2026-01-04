@@ -5,7 +5,7 @@
     "host": "127.0.0.1",
     "database": "tenant_{{ tenant_tag }}",
     "username": "tenant_{{ tenant_tag }}",
-    "password": "{{ tenant_db_password }}"
+    "password": "{{ _tenant_db_password }}"
   },
   "url": "https://{{ tenant_tag }}.{{ main_domain }}"
 }

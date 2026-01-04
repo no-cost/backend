@@ -65,8 +65,6 @@ async def provision_tenant(
             "tenant_tag": tenant_tag,
             "service_type": service_type,
             "tenant_admin_email": admin_email,
-            "tenant_admin_password": random_string(16),
-            "tenant_db_password": random_string(32),
             "force": force,
         },
     )

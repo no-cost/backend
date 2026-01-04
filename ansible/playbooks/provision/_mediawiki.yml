@@ -24,7 +24,7 @@
           --dbname="tenant_{{ tenant_tag }}" \
           --dbserver="127.0.0.1" \
           --dbuser="tenant_{{ tenant_tag }}" \
-          --dbpass={{ tenant_db_password | quote }} \
+          --dbpass={{ _tenant_db_password | quote }} \
           --server={{ ('https://' + tenant_tag + '.' + main_domain) | quote }} \
           --scriptpath="" \
           --lang="en" \
