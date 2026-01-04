@@ -1,6 +1,7 @@
 fastapi
 pydantic[email]
 
+ansible
 alembic
 aiomysql
 sqlalchemy[asyncio]

@@ -39,7 +39,9 @@ def run_playbook(
     )
 
     if result.status != "successful":
-        raise AnsibleError(playbook_path, result)
+        raise RuntimeError(
+            f"Playbook {playbook_path} failed with status: {result.status}. rc: {result.rc}, stats: {result.stats}.\n\nstdout: {result.stdout.read()}\n\nstderr: {result.stderr.read()}"
+        )
 
     return result
 
@@ -101,38 +103,3 @@ async def backup_tenant(
             "skip_backup": False,
         },
     )
-
-
-class AnsibleError(Exception):
-    """wrapper to extract failed tasks from ansible events"""
-
-    def __init__(self, playbook_path: str, result: "ansible_runner.Runner"):
-        self.playbook_path = playbook_path
-        self.result = result
-        self.failed_tasks = self._extract_failed_tasks(result.events)
-        super().__init__(self.__str__())
-
-    def _extract_failed_tasks(self, events: list[dict]) -> list[dict]:
-        failed = []
-        for event in events:
-            if event.get("event") in ("runner_on_failed", "runner_on_unreachable"):
-                event_data = event.get("event_data", {})
-                res = event_data.get("res", {})
-                failed.append({
-                    "task": event_data.get("task", "unknown"),
-                    "host": event_data.get("host", "unknown"),
-                    "msg": res.get("msg", res.get("stderr", str(res))),
-                })
-        return failed
-
-    def __str__(self) -> str:
-        msg = f"Playbook {self.playbook_path} failed with status: {self.result.status}"
-        if self.failed_tasks:
-            task_lines = [
-                f"  - Task '{t['task']}' on '{t['host']}': {t['msg']}"
-                for t in self.failed_tasks
-            ]
-            msg += "\n\nFailed tasks:\n" + "\n".join(task_lines)
-        else:
-            msg += f"\n\nrc: {self.result.rc}, stats: {self.result.stats}"
-        return msg
