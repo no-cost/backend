@@ -31,9 +31,11 @@ def run_playbook(
     cmdline = "--connection=local -i localhost,"
     if tags:
         cmdline += f" --tags {tags}"
+    # paths must be str
     result = ansible_runner.run(
-        private_data_dir=str(ANSIBLE_ROOT),  # path must be str
-        playbook=str(PLAYBOOKS_ROOT / playbook_path),
+        private_data_dir=str(ANSIBLE_ROOT),
+        project_dir=str(PLAYBOOKS_ROOT),
+        playbook=playbook_path,  # relative to project_dir
         extravars=all_vars,
         envvars={"PATH": environ["PATH"]},
         cmdline=cmdline,
@@ -42,7 +44,7 @@ def run_playbook(
 
     if result.status != "successful":
         raise RuntimeError(
-            f"Playbook {playbook_path} failed with status: {result.status}. rc: {result.rc}, stats: {result.stats}.\n\nstdout: {result.stdout.read()}\n\nstderr: {result.stderr.read()}"
+            f"Playbook {playbook_path} failed with status: {result.status}. rc: {result.rc}, stats: {result.stats}.\n\nstdout: {result.stdout.read()}\nstderr: {result.stderr.read()}"
         )
 
     return result
