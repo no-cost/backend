@@ -25,6 +25,7 @@ def run_playbook(
 
     all_vars = VARS.copy()
     all_vars.update(extravars)
+    all_vars["ansible_local_tmp"] = "/tmp/.ansible/tmp"
 
     rc = RunnerConfig(
         private_data_dir=str(ANSIBLE_ROOT),
