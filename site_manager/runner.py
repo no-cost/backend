@@ -25,6 +25,7 @@ def run_playbook(
 
     all_vars = VARS.copy()
     all_vars.update(extravars)
+    all_vars["ansible_shell_executable"] = "/bin/bash"
     all_vars["ansible_local_tmp"] = "/tmp/.ansible/tmp"
     all_vars["ansible_python_interpreter"] = f"{VENV_DIR}/bin/python"
 
@@ -35,7 +36,6 @@ def run_playbook(
         envvars=dict[str, str](environ),
         tags=tags,
         quiet=quiet,
-        runner_mode="subprocess",
     )
     rc.prepare()
 
