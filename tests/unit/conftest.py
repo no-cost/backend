@@ -9,7 +9,7 @@ os.environ.setdefault("ENVIRONMENT", "test")
 os.environ.setdefault("PHP_VERSION", "8.3")
 os.environ.setdefault("TENANTS_ROOT", "/tmp/test_tenants")
 os.environ.setdefault("SKELETON_ROOT", "/tmp/test_skeleton")
-os.environ.setdefault("BACKUP_ROOT", "/tmp/test_backups")
+os.environ.setdefault("BACKUP_HOST_ROOT", "/tmp/test_backups")
 os.environ.setdefault("BACKUP_ATTIC_ROOT", "/tmp/test_backup_attic")
 
 from contextlib import asynccontextmanager
