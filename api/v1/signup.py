@@ -4,6 +4,7 @@ import bcrypt
 import fastapi as fa
 from fastapi import BackgroundTasks
 from pydantic import BaseModel, EmailStr
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Site
@@ -64,10 +65,13 @@ async def signup(
         hostname=f"{request.tag}.{request.parent_domain}",
     )
 
-    background_tasks.add_task(provision_site, site)
+    try:
+        db.add(site)
+        await db.commit()
+    except IntegrityError as e:
+        raise fa.HTTPException(status_code=400, detail="Site already exists") from e
 
-    db.add(site)
-    await db.commit()
+    background_tasks.add_task(provision_site, site)
 
     return SignupResponse(
         message="Site created. You will receive an email when it is installed and ready to use.",
