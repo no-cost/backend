@@ -6,12 +6,11 @@ from os import environ
 from pathlib import Path
 from typing import Any
 
-import ansible_runner
+from ansible_runner import Runner, RunnerConfig
 
 from settings import VARS
 
 ANSIBLE_ROOT = Path(__file__).parent.parent / "ansible"
-PLAYBOOKS_ROOT = ANSIBLE_ROOT / "playbooks"
 
 
 def run_playbook(
@@ -19,7 +18,7 @@ def run_playbook(
     tags: str | None = None,
     quiet: bool = True,
     extravars: dict[str, Any] = {},
-) -> ansible_runner.Runner:
+) -> Runner:
     """
     Run an Ansible playbook with the given extra variables.
     """
@@ -28,25 +27,25 @@ def run_playbook(
     all_vars.update(extravars)
     all_vars["ansible_connection"] = "local"
 
-    cmdline = f"--tags {tags}" if tags else ""
-    # paths must be str
-    result = ansible_runner.run(
+    rc = RunnerConfig(
         private_data_dir=str(ANSIBLE_ROOT),
-        project_dir=str(PLAYBOOKS_ROOT),
-        playbook=playbook_path,  # relative to project_dir
+        playbook=playbook_path,  # relative to project dir: ansible/project/
         inventory="localhost,",
         extravars=all_vars,
         envvars={"PATH": environ["PATH"]},
-        cmdline=cmdline,
+        tags=tags,
         quiet=quiet,
     )
+    rc.prepare()
 
-    if result.status != "successful":
+    runner = Runner(config=rc)
+    runner.run()
+    if runner.status != "successful":
         raise RuntimeError(
-            f"Playbook {playbook_path} failed with status: {result.status}. rc: {result.rc}, stats: {result.stats}.\n\nstdout: {result.stdout.read()}\nstderr: {result.stderr.read()}"
+            f"Playbook {playbook_path} failed with status: {runner.status}. rc: {runner.rc}, stats: {runner.stats}.\n\nstdout: {runner.stdout.read()}\nstderr: {runner.stderr.read()}"
         )
 
-    return result
+    return runner
 
 
 async def provision_tenant(
@@ -54,7 +53,7 @@ async def provision_tenant(
     service_type: str,
     admin_email: str,
     force: bool = False,
-) -> ansible_runner.Runner:
+) -> Runner:
     """
     Provision a new tenant using Ansible.
     """
@@ -74,7 +73,7 @@ async def remove_tenant(
     tenant_tag: str,
     service_type: str,
     skip_backup: bool = False,
-) -> ansible_runner.Runner:
+) -> Runner:
     """
     Remove a tenant using Ansible.
     """
@@ -92,7 +91,7 @@ async def remove_tenant(
 async def backup_tenant(
     tenant_tag: str,
     service_type: str,
-) -> ansible_runner.Runner:
+) -> Runner:
     """
     Backup a tenant using Ansible.
     """
