@@ -28,7 +28,7 @@ def run_playbook(
     all_vars.update(extravars)
     all_vars["ansible_connection"] = "local"
 
-    cmdline = f"--tags {tags}" if tags else None
+    cmdline = f"--tags {tags}" if tags else ""
     # paths must be str
     result = ansible_runner.run(
         private_data_dir=str(ANSIBLE_ROOT),
