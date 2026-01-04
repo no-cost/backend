@@ -30,7 +30,6 @@ def run_playbook(
     rc = RunnerConfig(
         private_data_dir=str(ANSIBLE_ROOT),
         playbook=playbook_path,  # relative to project dir: ansible/project/
-        inventory="localhost,",
         extravars=all_vars,
         envvars={"PATH": environ["PATH"]},
         tags=tags,

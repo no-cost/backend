@@ -3,33 +3,36 @@
 #   - service_type: flarum|mediawiki|wordpress
 #   - skip_backup: boolean (default false)
 
-- name: Set tenant paths
-  ansible.builtin.set_fact:
-      tenant_dir: "{{ paths.tenants.root }}/{{ tenant_tag }}"
-      tenant_user: "tenant_{{ tenant_tag }}"
-      tenant_db: "tenant_{{ tenant_tag }}"
-      backup_dir: "{{ paths.backup_attic_root }}/{{ tenant_tag }}"
-  tags: [always]
+- name: Remove tenant
+  hosts: localhost
+  tasks:
+    - name: Set tenant paths
+      ansible.builtin.set_fact:
+        tenant_dir: "{{ paths.tenants.root }}/{{ tenant_tag }}"
+        tenant_user: "tenant_{{ tenant_tag }}"
+        tenant_db: "tenant_{{ tenant_tag }}"
+        backup_dir: "{{ paths.backup_attic_root }}/{{ tenant_tag }}"
+      tags: [always]
 
-- name: Verify tenant exists
-  ansible.builtin.stat:
-      path: "{{ tenant_dir }}"
-  register: tenant_exists
-  tags: [always]
+    - name: Verify tenant exists
+      ansible.builtin.stat:
+        path: "{{ tenant_dir }}"
+      register: tenant_exists
+      tags: [always]
 
-- name: Fail if tenant does not exist
-  ansible.builtin.fail:
-      msg: "Tenant directory `{{ tenant_dir }}` does not exist!"
-  when: not tenant_exists.stat.exists
-  tags: [always]
+    - name: Fail if tenant does not exist
+      ansible.builtin.fail:
+        msg: "Tenant directory `{{ tenant_dir }}` does not exist!"
+      when: not tenant_exists.stat.exists
+      tags: [always]
 
-# optional backup
-- name: Backup tenant data
-  ansible.builtin.include_tasks: ./_backup.yml
-  when: not (skip_backup | default(false) | bool)
-  tags: [backup]
+    # optional backup
+    - name: Backup tenant data
+      ansible.builtin.include_tasks: ./_backup.yml
+      when: not (skip_backup | default(false) | bool)
+      tags: [backup]
 
-# hard delete
-- name: Cleanup tenant resources
-  ansible.builtin.include_tasks: ./_cleanup.yml
-  tags: [cleanup]
+    # hard delete
+    - name: Cleanup tenant resources
+      ansible.builtin.include_tasks: ./_cleanup.yml
+      tags: [cleanup]

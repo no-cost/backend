@@ -4,97 +4,100 @@
 #   - tenant_admin_email
 #   - force: boolean (default false)
 
-- name: Generate tenant database password
-  ansible.builtin.set_fact:
-      _tenant_db_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=32') }}"
-  tags: [always]
+- name: Provision tenant
+  hosts: localhost
+  tasks:
+    - name: Generate tenant database password
+      ansible.builtin.set_fact:
+        _tenant_db_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=32') }}"
+      tags: [always]
 
-- name: Check if tenant already exists
-  ansible.builtin.stat:
-      path: "{{ paths.tenants.root }}/{{ tenant_tag }}"
-  register: tenant_exists
-  tags: [always]
+    - name: Check if tenant already exists
+      ansible.builtin.stat:
+        path: "{{ paths.tenants.root }}/{{ tenant_tag }}"
+      register: tenant_exists
+      tags: [always]
 
-- name: Fail if tenant already exists and force is not set
-  ansible.builtin.fail:
-      msg: "Tenant directory `{{ paths.tenants.root }}/{{ tenant_tag }}` already exists!"
-  when: not force | default(false) and tenant_exists.stat.exists
-  tags: [always]
+    - name: Fail if tenant already exists and force is not set
+      ansible.builtin.fail:
+        msg: "Tenant directory `{{ paths.tenants.root }}/{{ tenant_tag }}` already exists!"
+      when: not force | default(false) and tenant_exists.stat.exists
+      tags: [always]
 
-- name: Create tenant Linux user
-  ansible.builtin.user:
-      name: "tenant_{{ tenant_tag }}"
-      shell: /sbin/nologin
-      create_home: false
-  tags: [always]
+    - name: Create tenant Linux user
+      ansible.builtin.user:
+        name: "tenant_{{ tenant_tag }}"
+        shell: /sbin/nologin
+        create_home: false
+      tags: [always]
 
-- name: Create tenant database
-  community.mysql.mysql_db:
-      name: "tenant_{{ tenant_tag }}"
-      encoding: utf8mb4
-      collation: utf8mb4_unicode_ci
-      login_unix_socket: /var/run/mysqld/mysqld.sock
-      state: present
-  tags: [always]
+    - name: Create tenant database
+      community.mysql.mysql_db:
+        name: "tenant_{{ tenant_tag }}"
+        encoding: utf8mb4
+        collation: utf8mb4_unicode_ci
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        state: present
+      tags: [always]
 
-- name: Create database user for tenant
-  community.mysql.mysql_user:
-      name: "tenant_{{ tenant_tag }}"
-      password: "{{ _tenant_db_password }}"
-      priv: "tenant_{{ tenant_tag }}.*:ALL"
-      host: 127.0.0.1
-      login_unix_socket: /var/run/mysqld/mysqld.sock
-      column_case_sensitive: true
-      state: present
-  tags: [always]
+    - name: Create database user for tenant
+      community.mysql.mysql_user:
+        name: "tenant_{{ tenant_tag }}"
+        password: "{{ _tenant_db_password }}"
+        priv: "tenant_{{ tenant_tag }}.*:ALL"
+        host: 127.0.0.1
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        column_case_sensitive: true
+        state: present
+      tags: [always]
 
-- name: Create PHP-FPM pool for tenant
-  ansible.builtin.template:
-      src: "{{ playbook_dir }}/files/etc/php/fpm/pool-template.conf"
-      dest: /etc/php/fpm/pool.d/{{ tenant_tag }}.conf
-      mode: "644"
-  tags: [always]
+    - name: Create PHP-FPM pool for tenant
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/files/etc/php/fpm/pool-template.conf"
+        dest: /etc/php/fpm/pool.d/{{ tenant_tag }}.conf
+        mode: "644"
+      tags: [always]
 
-- name: Ensure mount points for libs exists
-  ansible.builtin.file:
-      path: "{{ paths.tenants.root }}/{{ tenant_tag }}/usr/lib"
-      state: directory
-      owner: "tenant_{{ tenant_tag }}"
-      group: "tenant_{{ tenant_tag }}"
-      mode: "755"
-  tags: [always]
+    - name: Ensure mount points for libs exists
+      ansible.builtin.file:
+        path: "{{ paths.tenants.root }}/{{ tenant_tag }}/usr/lib"
+        state: directory
+        owner: "tenant_{{ tenant_tag }}"
+        group: "tenant_{{ tenant_tag }}"
+        mode: "755"
+      tags: [always]
 
-- name: Mount libs
-  ansible.posix.mount:
-      src: "{{ paths.tenants.skeleton_root }}/{{ service_type }}/usr/lib"
-      path: "{{ paths.tenants.root }}/{{ tenant_tag }}/usr/lib"
-      opts: ro,bind
-      state: mounted
-      fstype: none
-  tags: [always]
+    - name: Mount libs
+      ansible.posix.mount:
+        src: "{{ paths.tenants.skeleton_root }}/{{ service_type }}/usr/lib"
+        path: "{{ paths.tenants.root }}/{{ tenant_tag }}/usr/lib"
+        opts: ro,bind
+        state: mounted
+        fstype: none
+      tags: [always]
 
-- name: "Deploy {{ service_type }}"
-  ansible.builtin.include_tasks: "./_{{ service_type }}.yml"
-  tags: [always]
+    - name: "Deploy {{ service_type }}"
+      ansible.builtin.include_tasks: "./_{{ service_type }}.yml"
+      tags: [always]
 
-- name: Render config.json template with tenant information
-  ansible.builtin.template:
-      src: "{{ playbook_dir }}/files/srv/skeleton/etc/config.json"
-      dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/etc/config.json"
-      owner: "tenant_{{ tenant_tag }}"
-      group: "tenant_{{ tenant_tag }}"
-      mode: "640"
-  tags: [always]
+    - name: Render config.json template with tenant information
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/files/srv/skeleton/etc/config.json"
+        dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/etc/config.json"
+        owner: "tenant_{{ tenant_tag }}"
+        group: "tenant_{{ tenant_tag }}"
+        mode: "640"
+      tags: [always]
 
-# todo also write hostname to nginx map
+    # todo also write hostname to nginx map
 
-- name: Reload services
-  ansible.builtin.systemd:
-      name: "{{ web_service }}"
-      state: reloaded
-  loop:
-      - "php{{ php_version }}-fpm"
-      - "nginx"
-  loop_control:
-      loop_var: web_service
-  tags: [always]
+    - name: Reload services
+      ansible.builtin.systemd:
+        name: "{{ web_service }}"
+        state: reloaded
+      loop:
+        - "php{{ php_version }}-fpm"
+        - "nginx"
+      loop_control:
+        loop_var: web_service
+      tags: [always]
