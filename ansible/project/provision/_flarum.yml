@@ -14,7 +14,9 @@
   ansible.builtin.template:
       src: "{{ playbook_dir }}/files/srv/skeleton/flarum/install.json"
       dest: "/tmp/tenant_{{ tenant_tag }}_install.json"
-      mode: "600"
+      owner: "tenant_{{ tenant_tag }}"
+      group: "tenant_{{ tenant_tag }}"
+      mode: "640"
   tags: ["skeleton", "flarum"]
 
 - name: Run install command
