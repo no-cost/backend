@@ -2,6 +2,7 @@
 Lower-level Ansible wrapper for tenant lifecycle management.
 """
 
+from os import environ
 from pathlib import Path
 from typing import Any
 
@@ -24,12 +25,12 @@ def run_playbook(
 
     all_vars = VARS.copy()
     all_vars.update(extravars)
-    all_vars["ansible_connection"] = "local"
 
     rc = RunnerConfig(
         private_data_dir=str(ANSIBLE_ROOT),
         playbook=playbook_path,  # relative to project dir: ansible/project/
         extravars=all_vars,
+        envvars=dict[str, str](environ),
         tags=tags,
         quiet=quiet,
     )

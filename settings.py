@@ -7,7 +7,6 @@ from os import environ
 allowed_domains = environ["ALLOWED_DOMAINS"].split(",")
 VARS = {
     "database_url": environ["DATABASE_URL"],
-    "environment": environ["ENVIRONMENT"],
     "allowed_domains": allowed_domains,
     "main_domain": allowed_domains[0],
     "php_version": environ["PHP_VERSION"],
