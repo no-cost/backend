@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import Site
 from database.session import get_session
 from site_manager import remove_site
-from site_manager.runner import AnsibleError
 
 V1_SITES = fa.APIRouter(prefix="/sites", tags=["sites"])
 
@@ -59,6 +58,7 @@ async def get_site(
 async def delete_site(
     site_tag: str,
     db: t.Annotated[AsyncSession, fa.Depends(get_session)],
+    background_tasks: fa.BackgroundTasks,
 ) -> dict:
     """
     Remove a site. Does not create a backup.
@@ -68,16 +68,7 @@ async def delete_site(
     if site is None or site.removed_at is not None:
         raise fa.HTTPException(status_code=404, detail="Site not found")
 
-    try:
-        await remove_site(
-            tenant_tag=site.tag,
-            service_type=site.site_type,
-            skip_backup=True,
-        )
-    except AnsibleError as e:
-        raise fa.HTTPException(
-            status_code=500, detail=f"Failed to remove site: {e}"
-        ) from e
+    background_tasks.add_task(remove_site, site, skip_backup=True)
 
     site.removed_at = datetime.now()
     site.removal_reason = "User requested"
