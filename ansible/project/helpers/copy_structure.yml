@@ -75,13 +75,8 @@
       opts: ro,bind
       state: mounted
       fstype: none
+  become: true
   loop: "{{ mount_paths | default([]) }}"
   loop_control:
       loop_var: mount_dir_rel
-  tags: [always]
-
-# HACK: the task above doesn't mount, for some reason?
-- name: Mount all
-  ansible.builtin.command:
-      cmd: mount -a
   tags: [always]
