@@ -1,6 +1,6 @@
-import os
-from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from os import environ
 
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 engine = create_async_engine(
-    os.getenv("DATABASE_URL", "sqlite+aiosqlite:///database.sqlite"),
+    environ["DATABASE_URL"],
     pool_size=20,
     max_overflow=0,
     echo=False,

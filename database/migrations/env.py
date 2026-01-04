@@ -1,6 +1,6 @@
 import asyncio
-from os import getenv
 from logging.config import fileConfig
+from os import environ
 
 from alembic import context
 from sqlalchemy import pool
@@ -30,7 +30,7 @@ target_metadata = models.Base.metadata
 # ... etc.
 config.set_main_option(
     "sqlalchemy.url",
-    getenv("DATABASE_URL", "sqlite+aiosqlite:///database.sqlite"),
+    environ["DATABASE_URL"],
 )
 
 
