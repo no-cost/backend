@@ -3,6 +3,10 @@ Interface for getting settings from environment variables.
 """
 
 from os import environ
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).parent.parent
+VENV_DIR = ROOT_DIR / ".venv"
 
 allowed_domains = environ["ALLOWED_DOMAINS"].split(",")
 VARS = {
