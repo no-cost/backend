@@ -6,6 +6,8 @@
 
 - name: Provision tenant
   hosts: localhost
+  connection: local
+  gather_facts: false
   tasks:
     - name: Generate tenant database password
       ansible.builtin.set_fact:

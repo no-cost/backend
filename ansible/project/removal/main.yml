@@ -5,6 +5,8 @@
 
 - name: Remove tenant
   hosts: localhost
+  connection: local
+  gather_facts: false
   tasks:
     - name: Set tenant paths
       ansible.builtin.set_fact:
