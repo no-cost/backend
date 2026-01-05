@@ -11,6 +11,7 @@ from database.models import Site
 from database.session import get_session
 from settings import VARS
 from site_manager import provision_site
+from site_manager.custom_domains import write_nginx_map
 
 V1_SIGNUP = fa.APIRouter(prefix="/signup", tags=["signup"])
 
@@ -69,12 +70,15 @@ async def signup(
         db.add(site)
         await db.commit()
     except IntegrityError as e:
-        raise fa.HTTPException(status_code=400, detail="Site already exists") from e
+        raise fa.HTTPException(
+            status_code=400, detail="A site with this tag already exists"
+        ) from e
 
-    background_tasks.add_task(provision_site, site)
+    background_tasks.add_task(provision_site, site, request.parent_domain, db)
+    background_tasks.add_task(write_nginx_map, db)
 
     return SignupResponse(
-        message="Site created. You will receive an email when it is installed and ready to use.",
+        message="Your site is now being installed. You will receive an email when it is ready to use.",
         site_tag=site.tag,
         hostname=site.hostname,
     )

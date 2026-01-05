@@ -1,7 +1,13 @@
+from __future__ import annotations
+
+import typing as t
 from datetime import datetime
 
-from sqlalchemy import String, func
+from sqlalchemy import String, func, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+if t.TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class Base(DeclarativeBase):
@@ -9,6 +15,8 @@ class Base(DeclarativeBase):
 
 
 class Site(Base):
+    """A model for a tenant. Each account = site."""
+
     __tablename__ = "sites"
 
     tag: Mapped[str] = mapped_column(
@@ -26,8 +34,8 @@ class Site(Base):
 
     # config
     site_type: Mapped[str] = mapped_column(String(length=30), nullable=False)
-    hostname: Mapped[str] = mapped_column(String(length=255), nullable=True)
-    installed_at: Mapped[datetime] = mapped_column(nullable=True, default=datetime.now)
+    hostname: Mapped[str] = mapped_column(String(length=255), nullable=False)
+    installed_at: Mapped[datetime] = mapped_column(nullable=False, default=datetime.now)
 
     # removal
     removal_reason: Mapped[str] = mapped_column(String(length=255), nullable=True)
@@ -41,7 +49,7 @@ class Site(Base):
 
     # misc
     donated_amount: Mapped[float] = mapped_column(nullable=True)
-    """Donations are per site, in EUR"""
+    """Donations are per site/account, in EUR"""
 
     # timestamps
     created_at: Mapped[datetime] = mapped_column(
@@ -71,3 +79,18 @@ class Site(Base):
     def has_perks(self) -> bool:
         """Returns whether the site admin has donated enough to have perks (such as the footer removed)"""
         return self.donated_amount is not None and self.donated_amount >= 7.0
+
+    # clsmethods
+    @classmethod
+    async def get_all_active(cls, db: AsyncSession, *additional_filters) -> list[Site]:
+        """Get all active sites."""
+
+        result = await db.execute(select(cls).where(cls.removed_at.is_(None), *additional_filters))
+        return result.scalars().all()
+
+    @classmethod
+    async def get_by_hostname(cls, db: AsyncSession, hostname: str, *additional_filters) -> Site | None:
+        """Get a site by its hostname."""
+
+        result = await db.execute(select(cls).where(cls.hostname == hostname, *additional_filters))
+        return result.scalar_one_or_none()
