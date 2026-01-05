@@ -68,8 +68,6 @@
   failed_when: false
   tags: [always]
 
-# HACK: the posix.mount module has problems with --bind mounts
-# https://github.com/ansible/ansible/issues/7121
 - name: Ensure fstab entries for bind mounts
   ansible.posix.mount:
       src: "{{ paths.tenants.skeleton_root }}/{{ service_type }}/{{ mount_dir_rel }}"
@@ -89,6 +87,11 @@
   loop_control:
       loop_var: mount_dir_rel
   register: mount_result
-  changed_when: mount_result.rc == 0
-  failed_when: mount_result.rc != 0 and 'already mounted' not in mount_result.stderr
+  ignore_errors: true
+  tags: [always]
+
+- name: Debug mount results
+  ansible.builtin.fail:
+      msg: "Mount {{ item.mount_dir_rel }}: rc={{ item.rc }}, stdout={{ item.stdout }}, stderr={{ item.stderr }}"
+  loop: "{{ mount_result.results }}"
   tags: [always]
