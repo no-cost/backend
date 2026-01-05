@@ -10,5 +10,5 @@
     "password": "{{ _tenant_db_password }}",
     "prefix": ""
   },
-  "url": "https://{{ tenant_tag }}.{{ main_domain }}"
+  "url": "https://{{ tenant_hostname }}"
 }

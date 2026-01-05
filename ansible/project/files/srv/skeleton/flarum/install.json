@@ -1,6 +1,6 @@
 {
     "debug": false,
-    "baseUrl": "https://{{ tenant_tag }}.{{ main_domain }}",
+    "baseUrl": "https://{{ tenant_hostname }}",
     "databaseConfiguration": {
         "driver": "mysql",
         "host": "127.0.0.1",

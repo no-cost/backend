@@ -66,10 +66,10 @@
       body: |
           Your Flarum forum has been provisioned successfully!
 
-          Domain: https://{{ tenant_tag }}.{{ main_domain }}
+          Domain: https://{{ tenant_hostname }}
 
           To set your admin password, visit the following link:
-          https://{{ tenant_tag }}.{{ main_domain }}/reset/{{ _flarum_reset_token }}
+          https://{{ tenant_hostname }}/reset/{{ _flarum_reset_token }}
 
           If you have any questions, please let us know by replying to this e-mail.
       from: "noreply@{{ main_domain }}"

@@ -69,10 +69,10 @@
       body: |
           Your MediaWiki site has been provisioned successfully!
 
-          Domain: https://{{ tenant_tag }}.{{ main_domain }}
+          Domain: https://{{ tenant_hostname }}
 
           To log in, visit the following link:
-          https://{{ tenant_tag }}.{{ main_domain }}/index.php?title=Special:UserLogin
+          https://{{ tenant_hostname }}/index.php?title=Special:UserLogin
 
           Username: Admin
           Temporary password: {{ _mw_temp_password }}

@@ -49,6 +49,7 @@ def run_playbook(
 async def provision_tenant(
     tenant_tag: str,
     service_type: str,
+    hostname: str,
     admin_email: str,
     force: bool = False,
 ) -> Runner:
@@ -60,6 +61,7 @@ async def provision_tenant(
         "provision_main.yml",
         extravars={
             "tenant_tag": tenant_tag,
+            "tenant_hostname": hostname,
             "service_type": service_type,
             "tenant_admin_email": admin_email,
             "force": force,

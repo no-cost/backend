@@ -17,6 +17,7 @@ async def provision_site(
     await provision_tenant(
         tenant_tag=site.tag,
         service_type=site.site_type,
+        hostname=site.hostname,
         admin_email=site.admin_email,
         force=force,
     )

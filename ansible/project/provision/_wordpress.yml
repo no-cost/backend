@@ -36,7 +36,7 @@
   ansible.builtin.command:
       cmd: |
           wp core install
-          --url='https://{{ tenant_tag }}.{{ main_domain }}'
+          --url='https://{{ tenant_hostname }}'
           --title='{{ tenant_tag | replace("_", " ") | title }}'
           --admin_user='admin'
           --admin_password='{{ lookup('password', '/dev/null chars=hexdigits length=32') }}'
@@ -82,10 +82,10 @@
       body: |
           Your WordPress site has been provisioned successfully!
 
-          Domain: https://{{ tenant_tag }}.{{ main_domain }}
+          Domain: https://{{ tenant_hostname }}
 
           To set your admin password, visit the following link:
-          https://{{ tenant_tag }}.{{ main_domain }}/wp-login.php?action=rp&key={{ _wp_reset_result.stdout | trim }}&login=admin
+          https://{{ tenant_hostname }}/wp-login.php?action=rp&key={{ _wp_reset_result.stdout | trim }}&login=admin
 
           If you have any questions, please let us know by replying to this e-mail.
       from: "noreply@{{ main_domain }}"
