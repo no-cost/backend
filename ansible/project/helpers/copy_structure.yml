@@ -89,9 +89,3 @@
   register: mount_result
   ignore_errors: true
   tags: [always]
-
-- name: Debug mount results
-  ansible.builtin.fail:
-      msg: "Mount {{ item.mount_dir_rel }}: rc={{ item.rc }}, stdout={{ item.stdout }}, stderr={{ item.stderr }}"
-  loop: "{{ mount_result.results }}"
-  tags: [always]

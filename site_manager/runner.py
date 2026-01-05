@@ -33,6 +33,7 @@ def run_playbook(
         envvars=dict[str, str](environ),
         tags=tags,
         quiet=quiet,
+        process_isolation=False,
     )
     rc.prepare()
 
