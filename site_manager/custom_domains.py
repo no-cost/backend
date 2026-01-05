@@ -119,14 +119,7 @@ map $site_id $service_type {{
 def _write_config_and_reload(config: str) -> None:
     NGINX_MAP_PATH.write_text(config)
 
-    result = subprocess.run(
-        ["nginx", "-t"],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"nginx config test failed: {result.stderr}")
-
+    # do not run nginx -t as nocost can't read nginx conf files
     subprocess.run(["nginx", "-s", "reload"], check=True)
 
 
