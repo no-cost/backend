@@ -142,7 +142,8 @@ def _write_config_and_reload(config: str) -> None:
     NGINX_MAP_PATH.write_text(config)
 
     # do not run nginx -t as nocost can't read nginx conf files
-    subprocess.run(["nginx", "-s", "reload"], check=True)
+    # for the same reason has to run via systemctl
+    subprocess.run(["systemctl", "reload", "nginx"], check=True)
 
 
 def _is_internal_domain(hostname: str) -> bool:
