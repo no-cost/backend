@@ -86,6 +86,4 @@
   loop: "{{ mount_paths | default([]) }}"
   loop_control:
       loop_var: mount_dir_rel
-  register: mount_result
-  ignore_errors: true
   tags: [always]
