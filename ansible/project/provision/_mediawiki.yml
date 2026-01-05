@@ -38,6 +38,8 @@
   ansible.builtin.template:
       src: "{{ playbook_dir }}/files/srv/skeleton/mediawiki/LocalSettings.php"
       dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public/LocalSettings.php"
+      owner: "tenant_{{ tenant_tag }}"
+      group: "tenant_{{ tenant_tag }}"
       mode: "600"
   tags: [always]
 
