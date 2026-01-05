@@ -73,16 +73,8 @@
       src: "{{ paths.tenants.skeleton_root }}/{{ service_type }}/{{ mount_dir_rel }}"
       path: "{{ paths.tenants.root }}/{{ tenant_tag }}/{{ mount_dir_rel }}"
       opts: ro,bind
-      state: present
+      state: mounted
       fstype: none
-  loop: "{{ mount_paths | default([]) }}"
-  loop_control:
-      loop_var: mount_dir_rel
-  tags: [always]
-
-- name: Mount bind mounts
-  ansible.builtin.command:
-      cmd: "mount {{ paths.tenants.root }}/{{ tenant_tag }}/{{ mount_dir_rel }}"
   loop: "{{ mount_paths | default([]) }}"
   loop_control:
       loop_var: mount_dir_rel
