@@ -98,11 +98,7 @@ async def write_nginx_map(db: AsyncSession) -> None:
     # site_id -> canonical hostname
     canonical_entries: list[str] = []
     for site in sites:
-        if not _is_internal_domain(site.hostname):
-            canonical_host = site.hostname
-        else:
-            canonical_host = f"{site.tag}.{main_domain}"
-        canonical_entries.append(f"    {site.tag}    {canonical_host};")
+        canonical_entries.append(f"    {site.tag}    {site.hostname};")
 
     # site_id -> service_type
     type_entries: list[str] = []
