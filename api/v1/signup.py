@@ -74,7 +74,7 @@ async def signup(
             status_code=400, detail="A site with this tag already exists"
         ) from e
 
-    background_tasks.add_task(provision_site, site, parent_domain=request.parent_domain, db=db)
+    background_tasks.add_task(provision_site, site, db)
     background_tasks.add_task(write_nginx_map, db)
 
     return SignupResponse(
