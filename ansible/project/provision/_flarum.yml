@@ -37,12 +37,9 @@
 # it can't be config.php from the start, because that makes the install command unavailable:
 # https://github.com/no-cost/flarum-multitenant/blob/2bd2da87c539cb187040ff84c7b06988dc6e17e3/vendor/flarum/core/src/Foundation/Site.php#L27-L34
 - name: Move config_temp.php to config.php
-  ansible.builtin.file:
-      src: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/config_temp.php"
-      dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/config.php"
-      owner: "tenant_{{ tenant_tag }}"
-      group: "tenant_{{ tenant_tag }}"
-      mode: "640"
+  ansible.builtin.command:
+      cmd: mv config_temp.php config.php
+      chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app"
   tags: [always]
 
 - name: Generate password reset token for admin
