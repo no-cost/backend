@@ -45,7 +45,7 @@
 - name: Overwrite LocalSettings.php
   ansible.builtin.command:
       cmd: mv --force LocalSettings_temp.php LocalSettings.php
-      chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app"
+      chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public"
   tags: [always]
 
 - name: Generate temporary password for admin
