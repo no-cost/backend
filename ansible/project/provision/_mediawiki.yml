@@ -42,6 +42,12 @@
   changed_when: true
   tags: [always]
 
+- name: Overwrite LocalSettings.php
+  ansible.builtin.command:
+      cmd: mv --force LocalSettings_temp.php LocalSettings.php
+      chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app"
+  tags: [always]
+
 - name: Generate temporary password for admin
   ansible.builtin.set_fact:
       _mw_temp_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=16') }}"
