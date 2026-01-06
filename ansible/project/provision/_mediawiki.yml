@@ -34,15 +34,6 @@
   changed_when: true
   tags: [always]
 
-- name: Render LocalSettings.php template
-  ansible.builtin.template:
-      src: "{{ playbook_dir }}/files/srv/skeleton/mediawiki/LocalSettings.php"
-      dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public/LocalSettings.php"
-      owner: "tenant_{{ tenant_tag }}"
-      group: "tenant_{{ tenant_tag }}"
-      mode: "600"
-  tags: [always]
-
 - name: Generate temporary password for admin
   ansible.builtin.set_fact:
       _mw_temp_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=16') }}"

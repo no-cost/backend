@@ -22,7 +22,7 @@
 - name: Run install command
   ansible.builtin.command:
       cmd: |
-          php flarum install --file="/tmp/tenant_{{ tenant_tag }}_install.json"
+          php flarum install --file="/tmp/tenant_{{ tenant_tag }}_install.json" --config="/dev/null"
       chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app"
   become: true
   become_user: "tenant_{{ tenant_tag }}"
@@ -32,14 +32,6 @@
   ansible.builtin.file:
       path: "/tmp/tenant_{{ tenant_tag }}_install.json"
       state: absent
-  tags: [always]
-
-# will overwrite what was set up by the install script
-- name: Overwrite config.php loader
-  ansible.builtin.copy:
-      src: "{{ playbook_dir }}/files/srv/skeleton/flarum/config.php"
-      dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/config.php"
-      mode: "644"
   tags: [always]
 
 - name: Generate password reset token for admin

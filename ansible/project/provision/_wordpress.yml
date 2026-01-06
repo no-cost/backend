@@ -17,21 +17,6 @@
       service_type: "wordpress"
   tags: [always]
 
-- name: Create wp-config.php with database credentials
-  ansible.builtin.command:
-      cmd: |
-          wp config create
-          --dbname='tenant_{{ tenant_tag }}'
-          --dbuser='tenant_{{ tenant_tag }}'
-          --dbpass='{{ _tenant_db_password }}'
-          --dbhost='127.0.0.1'
-          --locale='en_US'
-      chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public"
-      creates: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public/wp-config.php"
-  become: true
-  become_user: "tenant_{{ tenant_tag }}"
-  tags: [always]
-
 - name: Run WordPress installation
   ansible.builtin.command:
       cmd: |
@@ -55,13 +40,6 @@
   become: true
   become_user: "tenant_{{ tenant_tag }}"
   changed_when: true
-  tags: [always]
-
-- name: Render wp-config.php template
-  ansible.builtin.template:
-      src: "{{ playbook_dir }}/files/srv/skeleton/wordpress/wp-config.php"
-      dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public/wp-config.php"
-      mode: "644"
   tags: [always]
 
 - name: Generate password reset key for admin
