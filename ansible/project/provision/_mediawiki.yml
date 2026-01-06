@@ -39,6 +39,18 @@
           --pass={{ lookup('password', '/dev/null chars=hexdigits length=32') | quote }} {{ (tenant_tag | replace("_", " ") | title) | quote }} \
           "Admin"
       chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public"
+  become: true
+  become_user: "tenant_{{ tenant_tag }}"
+  changed_when: true
+  tags: [always]
+
+- name: Run MediaWiki update script
+  ansible.builtin.shell:
+      cmd: |
+          php maintenance/run.php update --quick
+      chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public"
+  become: true
+  become_user: "tenant_{{ tenant_tag }}"
   changed_when: true
   tags: [always]
 
