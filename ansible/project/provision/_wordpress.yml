@@ -61,7 +61,7 @@
           Domain: https://{{ tenant_hostname }}
 
           To set your admin password, visit the following link:
-          https://{{ tenant_hostname }}/wp-login.php?action=rp&key={{ _wp_reset_result.stdout | trim }}&login=admin
+          https://{{ tenant_hostname }}/wp-login.php?action=rp&key={{ _wp_reset_result.stdout | trim | urlencode }}&login=admin
 
           If you have any questions, please let us know by replying to this e-mail.
       from: "noreply@{{ main_domain }}"
