@@ -1,11 +1,17 @@
 ---
 # root in /app/
 
+# TODO: hardlink extend.php
 - name: Copy skeleton structure and mount vendor
   ansible.builtin.include_tasks: ../helpers/copy_structure.yml
   vars:
       mount_paths:
           - "app/vendor"
+      exclude_paths:
+          - "app/LICENSE"
+          - "app/README.md"
+          - "app/composer.json"
+          - "app/composer.lock"
       service_type: "flarum"
   tags: [always]
 

@@ -1,6 +1,7 @@
 ---
 # root in /app/public/
 
+# TODO: hardlink files, check if `resources/` can be mounted read-only
 - name: Copy skeleton structure and mount MediaWiki core directories
   ansible.builtin.include_tasks: ../helpers/copy_structure.yml
   vars:
@@ -12,8 +13,15 @@
           - "app/public/sql"
           - "app/public/vendor"
       exclude_paths:
-          - "app/public/tests"
+          - "app/public/CODE_OF_CONDUCT.md"
+          - "app/public/COPYING.md"
+          - "app/public/CREDITS.md"
           - "app/public/README.md"
+          - "app/public/UPGRADE"
+          - "app/public/bundlesize.config.js"
+          - "app/public/composer.json"
+          - "app/public/composer.local.json"
+          - "app/public/composer.lock"
       service_type: "mediawiki"
   tags: [always]
 

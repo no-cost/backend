@@ -11,8 +11,6 @@
           - "app/public/wp-content/mu-plugins"
           - "app/public/wp-includes"
       exclude_paths:
-          - "app/public/wp-config-sample.php"
-          - "app/public/readme.html"
           - "app/public/license.txt"
       service_type: "wordpress"
   tags: [always]
