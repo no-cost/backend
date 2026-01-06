@@ -80,8 +80,13 @@
             fstype: none
         tags: [always]
 
-      - name: "Deploy {{ service_type }}"
-        ansible.builtin.include_tasks: "./provision/_{{ service_type }}.yml"
+      - name: Ensure etc directory exists
+        ansible.builtin.file:
+            path: "{{ paths.tenants.root }}/{{ tenant_tag }}/etc"
+            state: directory
+            owner: "tenant_{{ tenant_tag }}"
+            group: "tenant_{{ tenant_tag }}"
+            mode: "755"
         tags: [always]
 
       - name: Render config.json template with tenant information
@@ -91,6 +96,10 @@
             owner: "tenant_{{ tenant_tag }}"
             group: "tenant_{{ tenant_tag }}"
             mode: "640"
+        tags: [always]
+
+      - name: "Deploy {{ service_type }}"
+        ansible.builtin.include_tasks: "./provision/_{{ service_type }}.yml"
         tags: [always]
 
       # todo also write hostname to nginx map
