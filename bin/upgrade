@@ -9,7 +9,7 @@ from database.session import get_session
 
 async def main():
     parser = argparse.ArgumentParser(description="Upgrade a tenant site")
-    parser.add_argument("tenant_tag", help="Tenant to upgrade")
+    parser.add_argument("--tag", help="Tenant to upgrade")
     parser.add_argument(
         "--service",
         help="Upgrade all tenants of this service type",
