@@ -4,17 +4,15 @@ from site_manager.runner import (
     provision_tenant,
     remove_tenant,
 )
+from utils import run_cmd
+from settings import VARS
 
 
-async def provision_site(
+def provision_site(
     site: Site,
     force: bool = False,
 ) -> None:
-    """
-    Provisions/creates/installs a new tenant site and updates the site in the database.
-    """
-
-    await provision_tenant(
+    provision_tenant(
         tenant_tag=site.tag,
         service_type=site.site_type,
         hostname=site.hostname,
@@ -23,15 +21,34 @@ async def provision_site(
     )
 
 
-async def remove_site(
+async def upgrade_site(
     site: Site,
-    reason: str | None = None,
+) -> None:
+    tenant_root = VARS["paths"]["tenants"]["root"] / site.tag
+    tenant_pub_dir = tenant_root / "public"
+    tenant_user = f"tenant_{site.tag}"
+
+    match site.site_type:
+        case "flarum":
+            await run_cmd(
+                "php flarum cache:clear",
+                user=tenant_user,
+                chdir=tenant_root / "app",  # flarum root is in /app/
+            )
+        case "mediawiki":
+            await run_cmd(
+                "php maintenance/run.php update --quick",
+                user=tenant_user,
+                chdir=tenant_pub_dir,
+            )
+        case "wordpress":
+            await run_cmd("wp cache flush", user=tenant_user, chdir=tenant_pub_dir)
+
+
+def remove_site(
+    site: Site,
     skip_backup: bool = False,
 ) -> None:
-    """
-    Removes a tenant site and updates the site in the database.
-    """
-
     remove_tenant(
         tenant_tag=site.tag,
         service_type=site.site_type,
@@ -39,16 +56,12 @@ async def remove_site(
     )
 
 
-async def backup_site(
+def backup_site(
     site: Site,
     service_type: str,
 ) -> None:
-    """
-    Backup a tenant site. Should be run periodically by a cron job.
-    """
-
     # TODO: do this from Python side, no need for Ansible?
-    await backup_tenant(
+    backup_tenant(
         tenant_tag=site.tag,
         service_type=service_type,
     )

@@ -1,26 +1,8 @@
 #!/usr/bin/env python3
-"""
-CLI script to create a new site.
-
-Usage: create_site <tenant_tag> <service_type> <admin_email> [--password=<password>]
-
-Arguments:
-    tenant_tag      Unique 4-character identifier for the site
-    service_type    Type of site: flarum, mediawiki, or wordpress
-    admin_email     Administrator email address
-
-Options:
-    --password=<password>   Admin password (generated if not provided)
-"""
-
 import argparse
 import asyncio
 import secrets
 import sys
-from pathlib import Path
-
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from site_manager import create_site
 

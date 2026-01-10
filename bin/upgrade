@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+import argparse
+import asyncio
+
+from site_manager import upgrade_site
+from database.models import Site
+from database.session import get_session
+
+
+async def main():
+    parser = argparse.ArgumentParser(description="Upgrade a tenant site")
+    parser.add_argument("tenant_tag", help="Tenant to upgrade")
+    parser.add_argument(
+        "--service",
+        help="Upgrade all tenants of this service type",
+        choices=["flarum", "mediawiki", "wordpress"],
+        default=None,
+    )
+
+    args = parser.parse_args()
+
+    async with get_session() as db:
+        sites = await Site.get_all_active(
+            db, (Site.site_type == args.service) if args.service else None
+        )
+
+    for site in sites:
+        print(f"Upgrading {site.tag} ({site.site_type})...")
+        await upgrade_site(site)
+        print(f"ok {site.tag}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

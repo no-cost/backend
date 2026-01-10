@@ -46,7 +46,7 @@ def run_playbook(
     return runner
 
 
-async def provision_tenant(
+def provision_tenant(
     tenant_tag: str,
     service_type: str,
     hostname: str,
@@ -69,7 +69,7 @@ async def provision_tenant(
     )
 
 
-async def remove_tenant(
+def remove_tenant(
     tenant_tag: str,
     service_type: str,
     skip_backup: bool = False,
@@ -88,7 +88,7 @@ async def remove_tenant(
     )
 
 
-async def backup_tenant(
+def backup_tenant(
     tenant_tag: str,
     service_type: str,
 ) -> Runner:
