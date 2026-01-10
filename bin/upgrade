@@ -21,7 +21,9 @@ async def main():
 
     async with get_session() as db:
         sites = await Site.get_all_active(
-            db, (Site.site_type == args.service) if args.service else None
+            db,
+            (Site.site_type == args.service) if args.service else None,
+            (Site.tag == args.tenant_tag) if args.tenant_tag else None,
         )
 
     for site in sites:
