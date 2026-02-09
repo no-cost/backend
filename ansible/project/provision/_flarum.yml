@@ -77,6 +77,9 @@
           To set your admin password for your instance, visit the following link:
           https://{{ tenant_hostname }}/reset/{{ _flarum_reset_token }}
 
+          To set your password for the settings panel, visit the following link:
+          https://{{ main_domain }}/reset-password?token={{ tenant_reset_token }}
+
           If you have any questions, please let us know by replying to this e-mail.
       from: "noreply@{{ main_domain }}"
   failed_when: false

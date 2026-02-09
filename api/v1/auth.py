@@ -52,5 +52,34 @@ def create_access_token(site_tag: str) -> str:
     )
 
 
+def create_reset_token(site_tag: str) -> str:
+    expires = datetime.now(timezone.utc) + timedelta(hours=48)
+    return jwt.encode(
+        {"sub": site_tag, "purpose": "reset", "exp": expires},
+        VARS["jwt_secret"],
+        algorithm="HS256",
+    )
+
+
+def decode_reset_token(token: str) -> str:
+    """Decode a password reset JWT and return the site tag."""
+
+    try:
+        payload = jwt.decode(token, VARS["jwt_secret"], algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        raise fa.HTTPException(status_code=400, detail="Reset link has expired")
+    except jwt.InvalidTokenError:
+        raise fa.HTTPException(status_code=400, detail="Invalid reset link")
+
+    if payload.get("purpose") != "reset":
+        raise fa.HTTPException(status_code=400, detail="Invalid reset link")
+
+    tag = payload.get("sub")
+    if tag is None:
+        raise fa.HTTPException(status_code=400, detail="Invalid reset link")
+
+    return tag
+
+
 def verify_password(plain: str, hashed: str) -> bool:
     return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))

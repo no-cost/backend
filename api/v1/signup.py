@@ -1,4 +1,5 @@
 import typing as t
+import secrets
 
 import bcrypt
 import fastapi as fa
@@ -7,6 +8,7 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.v1.auth import create_reset_token
 from database.models import Site
 from database.session import get_session
 from settings import VARS
@@ -19,7 +21,6 @@ V1_SIGNUP = fa.APIRouter(prefix="/signup", tags=["signup"])
 class SignupRequest(BaseModel):
     tag: str
     email: EmailStr
-    password: str
     site_type: str
     parent_domain: str
 
@@ -54,14 +55,15 @@ async def signup(
             detail="Invalid parent domain.",
         )
 
-    hashed_password = bcrypt.hashpw(
-        request.password.encode("utf-8"), bcrypt.gensalt()
+    # temporary random password (user is expected to set one via email link)
+    throwaway_password = bcrypt.hashpw(
+        secrets.token_bytes(32), bcrypt.gensalt()
     ).decode("utf-8")
 
     site = Site(
         tag=request.tag,
         admin_email=request.email,
-        admin_password=hashed_password,
+        admin_password=throwaway_password,
         site_type=request.site_type,
         hostname=f"{request.tag}.{request.parent_domain}",
     )
@@ -74,11 +76,12 @@ async def signup(
             status_code=400, detail="A site with this tag already exists"
         ) from e
 
-    background_tasks.add_task(provision_site, site)
+    reset_token = create_reset_token(site.tag)
+    background_tasks.add_task(provision_site, site, reset_token)
     background_tasks.add_task(write_nginx_map, db)
 
     return SignupResponse(
-        message="Your site is now being installed. You will receive an email when it is ready to use.",
+        message="Your site is being installed. Check your email to set your password.",
         site_tag=site.tag,
         hostname=site.hostname,
     )

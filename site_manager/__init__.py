@@ -10,6 +10,7 @@ from settings import VARS
 
 def provision_site(
     site: Site,
+    reset_token: str,
     force: bool = False,
 ) -> None:
     provision_tenant(
@@ -17,6 +18,7 @@ def provision_site(
         service_type=site.site_type,
         hostname=site.hostname,
         admin_email=site.admin_email,
+        reset_token=reset_token,
         force=force,
     )
 

@@ -60,8 +60,11 @@
 
           Domain: https://{{ tenant_hostname }}
 
-          To set your admin password, visit the following link:
+          To set your admin password for your instance, visit the following link:
           https://{{ tenant_hostname }}/wp-login.php?action=rp&key={{ _wp_reset_result.stdout | trim | urlencode }}&login=admin
+
+          To set your password for the settings panel, visit the following link:
+          https://{{ main_domain }}/reset-password?token={{ tenant_reset_token }}
 
           If you have any questions, please let us know by replying to this e-mail.
       from: "noreply@{{ main_domain }}"

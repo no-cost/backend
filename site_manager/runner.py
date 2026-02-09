@@ -51,6 +51,7 @@ def provision_tenant(
     service_type: str,
     hostname: str,
     admin_email: str,
+    reset_token: str,
     force: bool = False,
 ) -> Runner:
     """
@@ -64,6 +65,7 @@ def provision_tenant(
             "tenant_hostname": hostname,
             "service_type": service_type,
             "tenant_admin_email": admin_email,
+            "tenant_reset_token": reset_token,
             "force": force,
         },
     )
