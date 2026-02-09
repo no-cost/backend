@@ -82,6 +82,8 @@ async def signup(
     reset_token = create_reset_token(site.tag)
     background_tasks.add_task(provision_site, site, reset_token)
     background_tasks.add_task(write_nginx_map, db)
+    
+    # TODO: after successful installation, set installed_at to now
 
     return SignupResponse(
         message="Your site is being installed. Check your email to set your password.",

@@ -35,7 +35,7 @@ class Site(Base):
     # config
     site_type: Mapped[str] = mapped_column(String(length=30), nullable=False)
     hostname: Mapped[str] = mapped_column(String(length=255), nullable=False)
-    installed_at: Mapped[datetime] = mapped_column(nullable=False, default=datetime.now)
+    installed_at: Mapped[datetime] = mapped_column(nullable=True)
 
     # removal
     removal_reason: Mapped[str] = mapped_column(String(length=255), nullable=True)
