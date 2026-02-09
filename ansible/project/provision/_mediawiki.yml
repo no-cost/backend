@@ -50,8 +50,7 @@
 
 - name: Run MediaWiki update script
   ansible.builtin.shell:
-      cmd: |
-          php maintenance/run.php update --quick
+      cmd: "php maintenance/run.php update --quick"
       chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public"
   become: true
   become_user: "tenant_{{ tenant_tag }}"
