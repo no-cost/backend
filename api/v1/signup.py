@@ -59,9 +59,9 @@ async def signup(
         )
 
     # temporary random password (user is expected to set one via email link)
-    throwaway_password = bcrypt.hashpw(random_string(32), bcrypt.gensalt()).decode(
-        "utf-8"
-    )
+    throwaway_password = bcrypt.hashpw(
+        random_string(32).encode("utf-8"), bcrypt.gensalt()
+    ).decode("utf-8")
 
     site = Site(
         tag=request.tag,
