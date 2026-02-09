@@ -25,6 +25,10 @@
       service_type: "mediawiki"
   tags: [always]
 
+- name: Render tenant config
+  ansible.builtin.include_tasks: ../helpers/render_config.yml
+  tags: [always]
+
 - name: Run MediaWiki installation script
   ansible.builtin.shell:
       cmd: |

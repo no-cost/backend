@@ -15,6 +15,10 @@
       service_type: "wordpress"
   tags: [always]
 
+- name: Render tenant config
+  ansible.builtin.include_tasks: ../helpers/render_config.yml
+  tags: [always]
+
 - name: Run WordPress installation
   ansible.builtin.command:
       cmd: |
