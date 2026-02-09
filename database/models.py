@@ -82,11 +82,12 @@ class Site(Base):
 
     # clsmethods
     @classmethod
-    async def get_all_active(cls, db: AsyncSession, *additional_filters) -> list[Site]:
-        """Get all active sites."""
+    async def get_all_active(cls, db: AsyncSession, *additional_filters):
+        """Get all active sites as an async iterator."""
 
-        result = await db.execute(select(cls).where(cls.removed_at.is_(None), *additional_filters))
-        return result.scalars().all()
+        result = await db.stream(select(cls).where(cls.removed_at.is_(None), *additional_filters))
+        async for row in result.scalars():
+            yield row
 
     @classmethod
     async def get_by_hostname(cls, db: AsyncSession, hostname: str, *additional_filters) -> Site | None:

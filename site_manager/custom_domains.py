@@ -75,34 +75,27 @@ async def unlink_custom_domain(
 
 async def write_nginx_map(db: AsyncSession) -> None:
     """
-    Write the nginx map configuration file and reload nginx.
+    Write the nginx map configuration file for all tenants and reload nginx.
 
     This generates /etc/nginx/maps/sites.conf, see [`nocost/deploy`](https://github.com/no-cost/deploy/blob/master/playbooks/files/etc/nginx/maps/sites.conf).
     """
 
-    sites = await Site.get_all_active(db, Site.hostname.isnot(None))
-    main_domain = VARS["main_domain"]
-    allowed_domains = VARS["allowed_domains"]
-
     # hostnames -> site_id
     internal_entries: list[str] = []
     custom_entries: list[str] = []
-    for site in sites:
+    # site_id -> canonical hostname
+    canonical_entries: list[str] = []
+    # site_id -> service_type
+    type_entries: list[str] = []
+
+    async for site in Site.get_all_active(db, Site.hostname.isnot(None)):
         # internal hosts: {tag}.{domain} permutations
-        for domain in allowed_domains:
+        for domain in VARS["allowed_domains"]:
             internal_entries.append(f"    {site.tag}.{domain}    {site.tag};")
         # custom domain entry
         if not _is_internal_domain(site.hostname):
             custom_entries.append(f"    {site.hostname}    {site.tag};")
-
-    # site_id -> canonical hostname
-    canonical_entries: list[str] = []
-    for site in sites:
         canonical_entries.append(f"    {site.tag}    {site.hostname};")
-
-    # site_id -> service_type
-    type_entries: list[str] = []
-    for site in sites:
         type_entries.append(f"    {site.tag}    {site.site_type};")
 
     config = f"""\

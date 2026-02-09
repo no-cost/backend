@@ -20,16 +20,14 @@ async def main():
     args = parser.parse_args()
 
     async with get_session() as db:
-        sites = await Site.get_all_active(
+        async for site in Site.get_all_active(
             db,
             (Site.site_type == args.service) if args.service else None,
             (Site.tag == args.tenant_tag) if args.tenant_tag else None,
-        )
-
-    for site in sites:
-        print(f"Upgrading {site.tag} ({site.site_type})...")
-        await upgrade_site(site)
-        print(f"ok {site.tag}")
+        ):
+            print(f"Upgrading {site.tag} ({site.site_type})...")
+            await upgrade_site(site)
+            print(f"ok {site.tag}")
 
 
 if __name__ == "__main__":
