@@ -102,8 +102,6 @@
         ansible.builtin.include_tasks: "./provision/_{{ service_type }}.yml"
         tags: [always]
 
-      # todo also write hostname to nginx map
-
       - name: Reload services
         ansible.builtin.systemd:
             name: "{{ web_service }}"

@@ -8,6 +8,7 @@ dnspython
 sqlalchemy[asyncio]
 
 bcrypt
+PyJWT
 uvicorn
 gunicorn
 ansible-runner

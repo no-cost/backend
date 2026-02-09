@@ -2,7 +2,7 @@ import fastapi as fa
 
 from api.v1.account import V1_ACCOUNT
 from api.v1.signup import V1_SIGNUP
-from api.v1.sites import V1_SITES
+from api.v1.settings import V1_SETTINGS
 
 V1 = fa.APIRouter(prefix="/v1")
 
@@ -14,4 +14,4 @@ async def index():
 
 V1.include_router(V1_ACCOUNT)
 V1.include_router(V1_SIGNUP)
-V1.include_router(V1_SITES)
+V1.include_router(V1_SETTINGS)

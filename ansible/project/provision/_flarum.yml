@@ -74,7 +74,7 @@
 
           Domain: https://{{ tenant_hostname }}
 
-          To set your admin password, visit the following link:
+          To set your admin password for your instance, visit the following link:
           https://{{ tenant_hostname }}/reset/{{ _flarum_reset_token }}
 
           If you have any questions, please let us know by replying to this e-mail.

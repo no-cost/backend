@@ -5,12 +5,15 @@ Interface for getting settings from environment variables.
 from os import environ
 
 allowed_domains = environ["ALLOWED_DOMAINS"].split(",")
+
 VARS = {
-    "database_url": environ["DATABASE_URL"],
     "allowed_domains": allowed_domains,
+    "available_site_types": ["flarum", "mediawiki", "wordpress"],
+    "database_url": environ["DATABASE_URL"],
+    "jwt_secret": environ["JWT_SECRET"],
+    "jwt_expiry_hours": 24,
     "main_domain": allowed_domains[0],
     "php_version": environ["PHP_VERSION"],
-    "available_site_types": ["flarum", "mediawiki", "wordpress"],
     "paths": {
         "tenants": {
             "root": environ["TENANTS_ROOT"],
