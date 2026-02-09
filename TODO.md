@@ -1,6 +1,6 @@
 # todo
 
-- [ ] auth
+- [x] auth
 - [ ] settings
 - [ ] backups!!!!!
 - [ ] monitoring!!

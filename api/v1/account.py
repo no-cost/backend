@@ -16,8 +16,9 @@ from api.v1.auth import (
 )
 from database.models import Site
 from database.session import get_session
-from utils import send_mail
 from settings import VARS
+from turnstile import verify_turnstile
+from utils import send_mail
 
 V1_ACCOUNT = fa.APIRouter(prefix="/account", tags=["account"])
 
@@ -43,6 +44,7 @@ class AccountResponse(BaseModel):
 
 class ResetPasswordRequestBody(BaseModel):
     email: EmailStr
+    turnstile_token: str
 
 
 class ResetPasswordBody(BaseModel):
@@ -90,6 +92,8 @@ async def request_password_reset(
     db: t.Annotated[AsyncSession, fa.Depends(get_session)],
 ):
     """Send a password reset email. Always returns 200 to prevent email enumeration."""
+
+    await verify_turnstile(body.turnstile_token)
 
     result = await db.execute(
         select(Site).where(Site.admin_email == body.email, Site.removed_at.is_(None))

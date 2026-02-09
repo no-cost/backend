@@ -1,5 +1,5 @@
-import typing as t
 import secrets
+import typing as t
 
 import bcrypt
 import fastapi as fa
@@ -14,6 +14,7 @@ from database.session import get_session
 from settings import VARS
 from site_manager import provision_site
 from site_manager.custom_domains import write_nginx_map
+from turnstile import verify_turnstile
 
 V1_SIGNUP = fa.APIRouter(prefix="/signup", tags=["signup"])
 
@@ -23,6 +24,7 @@ class SignupRequest(BaseModel):
     email: EmailStr
     site_type: str
     parent_domain: str
+    turnstile_token: str
 
 
 class SignupResponse(BaseModel):
@@ -42,6 +44,8 @@ async def signup(
 
     The site installation happens in the background after the response is sent.
     """
+
+    await verify_turnstile(request.turnstile_token)
 
     if request.site_type not in VARS["available_site_types"]:
         raise fa.HTTPException(

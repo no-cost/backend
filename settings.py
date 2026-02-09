@@ -14,6 +14,7 @@ VARS = {
     "jwt_expiry_hours": 24,
     "main_domain": allowed_domains[0],
     "php_version": environ["PHP_VERSION"],
+    "turnstile_key": environ["TURNSTILE_KEY"],
     "paths": {
         "tenants": {
             "root": environ["TENANTS_ROOT"],
