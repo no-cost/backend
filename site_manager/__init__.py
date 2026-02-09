@@ -1,11 +1,11 @@
 from database.models import Site
+from settings import VARS
 from site_manager.runner import (
     backup_tenant,
     provision_tenant,
     remove_tenant,
 )
 from utils import run_cmd
-from settings import VARS
 
 
 def provision_site(

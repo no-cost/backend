@@ -17,8 +17,7 @@ from api.v1.auth import (
 from database.models import Site
 from database.session import get_session
 from settings import VARS
-from turnstile import verify_turnstile
-from utils import send_mail
+from utils import send_mail, verify_turnstile
 
 V1_ACCOUNT = fa.APIRouter(prefix="/account", tags=["account"])
 

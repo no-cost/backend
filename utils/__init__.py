@@ -1,15 +1,11 @@
-import smtplib
-from email.message import EmailMessage
+import secrets
 
-from settings import VARS
+from utils.cmd import run_cmd
+from utils.mail import send_mail
+from utils.turnstile import verify_turnstile
+
+__all__ = ["run_cmd", "send_mail", "verify_turnstile", "random_string"]
 
 
-def send_mail(to: str, subject: str, body: str) -> None:
-    msg = EmailMessage()
-    msg["From"] = f"noreply@{VARS['main_domain']}"
-    msg["To"] = to
-    msg["Subject"] = subject
-    msg.set_content(body)
-
-    with smtplib.SMTP("127.0.0.1", 25) as smtp:
-        smtp.send_message(msg)
+def random_string(*args, **kwargs) -> str:
+    return secrets.token_urlsafe(*args, **kwargs)

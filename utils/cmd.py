@@ -1,9 +1,4 @@
 import asyncio
-import secrets
-
-
-def random_string(*args, **kwargs) -> str:
-    return secrets.token_urlsafe(*args, **kwargs)
 
 
 async def run_cmd(
@@ -14,8 +9,8 @@ async def run_cmd(
         await process.wait()
         if process.returncode != 0:
             raise RuntimeError(
-                f"cmd '{command}' failed with return code: {process.returncode}\n" \
-                f"stdout: {process.stdout.read().decode('utf-8')}\n" \
+                f"cmd '{command}' failed with return code: {process.returncode}\n"
+                f"stdout: {process.stdout.read().decode('utf-8')}\n"
                 f"stderr: {process.stderr.read().decode('utf-8')}"
             )
 

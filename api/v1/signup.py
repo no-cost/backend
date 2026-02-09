@@ -1,4 +1,3 @@
-import secrets
 import typing as t
 
 import bcrypt
@@ -14,7 +13,7 @@ from database.session import get_session
 from settings import VARS
 from site_manager import provision_site
 from site_manager.custom_domains import write_nginx_map
-from turnstile import verify_turnstile
+from utils import random_string, verify_turnstile
 
 V1_SIGNUP = fa.APIRouter(prefix="/signup", tags=["signup"])
 
@@ -60,9 +59,9 @@ async def signup(
         )
 
     # temporary random password (user is expected to set one via email link)
-    throwaway_password = bcrypt.hashpw(
-        secrets.token_bytes(32), bcrypt.gensalt()
-    ).decode("utf-8")
+    throwaway_password = bcrypt.hashpw(random_string(32), bcrypt.gensalt()).decode(
+        "utf-8"
+    )
 
     site = Site(
         tag=request.tag,
