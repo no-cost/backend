@@ -81,7 +81,7 @@ async def signup(
             status_code=400, detail="A site with this tag already exists"
         ) from e
 
-    reset_token = create_reset_token(site.tag)
+    reset_token = create_reset_token(site.tag, site.admin_password)
     background_tasks.add_task(_provision_and_finalize, site.tag, reset_token)
 
     return SignupResponse(

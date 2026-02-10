@@ -1,3 +1,4 @@
+import hashlib
 import typing as t
 from datetime import datetime, timedelta, timezone
 
@@ -58,16 +59,28 @@ def decode_access_token(token: str) -> str:
     return tag
 
 
-def create_reset_token(site_tag: str) -> str:
+def _password_fingerprint(password_hash: str) -> str:
+    """Short hash derived from the bcrypt password hash, used to bind reset tokens to the current password."""
+    return hashlib.sha256(password_hash.encode()).hexdigest()[:16]
+
+
+def create_reset_token(site_tag: str, password_db_hash: str) -> str:
     expires = datetime.now(timezone.utc) + timedelta(hours=48)
     return jwt.encode(
-        {"sub": site_tag, "purpose": "reset", "exp": expires},
+        {
+            "sub": site_tag,
+            "purpose": "reset",
+            "pfp": _password_fingerprint(password_db_hash),
+            "exp": expires,
+        },
         VARS["jwt_secret"],
         algorithm="HS256",
     )
 
 
-def decode_reset_token(token: str) -> str:
+def decode_reset_token(token: str) -> tuple[str, str]:
+    """Returns (site_tag, password_fingerprint)."""
+
     try:
         payload = jwt.decode(token, VARS["jwt_secret"], algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
@@ -79,10 +92,11 @@ def decode_reset_token(token: str) -> str:
         raise fa.HTTPException(status_code=400, detail="Invalid reset link")
 
     tag = payload.get("sub")
-    if tag is None:
+    pfp = payload.get("pfp")
+    if tag is None or pfp is None:
         raise fa.HTTPException(status_code=400, detail="Invalid reset link")
 
-    return tag
+    return tag, pfp
 
 
 def verify_password(plain: str, hashed: str) -> bool:

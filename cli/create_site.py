@@ -61,7 +61,7 @@ async def _main():
             print(f"Error: site '{args.tag}' already exists", file=sys.stderr)
             sys.exit(1)
 
-        reset_token = create_reset_token(site.tag)
+        reset_token = create_reset_token(site.tag, site.admin_password)
         provision_site(site, reset_token, force=args.force)
 
         site.installed_at = datetime.now()

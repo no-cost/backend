@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.v1.auth import (
+    _password_fingerprint,
     create_access_token,
     create_reset_token,
     decode_reset_token,
@@ -100,7 +101,7 @@ async def request_password_reset(
     site = result.scalar_one_or_none()
 
     if site is not None:
-        token = create_reset_token(site.tag)
+        token = create_reset_token(site.tag, site.admin_password)
         link = f"https://{VARS['main_domain']}/reset-password?token={token}"
 
         send_mail(
@@ -125,7 +126,7 @@ async def reset_password(
 ):
     """Set a new password using a valid reset token."""
 
-    tag = decode_reset_token(body.token)
+    tag, pfp = decode_reset_token(body.token)
     result = await db.execute(
         select(Site).where(Site.tag == tag, Site.removed_at.is_(None))
     )
@@ -133,6 +134,9 @@ async def reset_password(
     site = result.scalar_one_or_none()
     if site is None:
         raise fa.HTTPException(status_code=404, detail="Site not found")
+
+    if pfp != _password_fingerprint(site.admin_password):
+        raise fa.HTTPException(status_code=400, detail="Reset link is invalid or has already been used")
 
     site.admin_password = bcrypt.hashpw(
         body.password.encode("utf-8"), bcrypt.gensalt()
