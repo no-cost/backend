@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import sys
+from datetime import datetime
 
 import bcrypt
 from sqlalchemy.exc import IntegrityError
@@ -33,6 +34,11 @@ async def _main():
         help=f"Parent domain (default: {VARS['main_domain']})",
         default=VARS["main_domain"],
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force provisioning even if site already exists",
+    )
 
     args = parser.parse_args()
     password = args.password or random_string(16)
@@ -56,7 +62,11 @@ async def _main():
             sys.exit(1)
 
         reset_token = create_reset_token(site.tag)
-        provision_site(site, reset_token)
+        provision_site(site, reset_token, force=args.force)
+
+        site.installed_at = datetime.now()
+        await db.commit()
+
         await write_nginx_map(db)
 
     print(f"Site created: {args.tag} ({hostname})")

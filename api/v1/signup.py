@@ -1,4 +1,6 @@
+import asyncio
 import typing as t
+from datetime import datetime
 
 import bcrypt
 import fastapi as fa
@@ -9,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.v1.auth import create_reset_token
 from database.models import Site
-from database.session import get_session
+from database.session import async_session_factory, get_session
 from settings import VARS
 from site_manager import provision_site
 from site_manager.custom_domains import write_nginx_map
@@ -80,13 +82,22 @@ async def signup(
         ) from e
 
     reset_token = create_reset_token(site.tag)
-    background_tasks.add_task(provision_site, site, reset_token)
-    background_tasks.add_task(write_nginx_map, db)
-    
-    # TODO: after successful installation, set installed_at to now
+    background_tasks.add_task(_provision_and_finalize, site.tag, reset_token)
 
     return SignupResponse(
         message="Your site is being installed. Check your email to set your password.",
         site_tag=site.tag,
         hostname=site.hostname,
     )
+
+
+async def _provision_and_finalize(site_tag: str, reset_token: str):
+    async with async_session_factory() as db:
+        site = await db.get(Site, site_tag)
+
+        await asyncio.to_thread(provision_site, site, reset_token)
+
+        site.installed_at = datetime.now()
+        await db.commit()
+
+        await write_nginx_map(db)
