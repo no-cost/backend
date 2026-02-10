@@ -4,7 +4,6 @@ from datetime import datetime
 import bcrypt
 import fastapi as fa
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.v1.auth import (
@@ -43,7 +42,7 @@ class AccountResponse(BaseModel):
 
 
 class ResetPasswordRequestBody(BaseModel):
-    email: EmailStr
+    site: str
     turnstile_token: str
 
 
@@ -57,10 +56,7 @@ async def login(
     request: LoginRequest,
     db: t.Annotated[AsyncSession, fa.Depends(get_session)],
 ):
-    result = await db.execute(
-        select(Site).where(Site.tag == request.username, Site.removed_at.is_(None))
-    )
-    site = result.scalar_one_or_none()
+    site = await Site.get_by_tag_or_hostname(db, request.username)
 
     if site is None or not verify_password(request.password, site.admin_password):
         raise fa.HTTPException(status_code=401, detail="Invalid credentials")
@@ -91,32 +87,28 @@ async def request_password_reset(
     body: ResetPasswordRequestBody,
     db: t.Annotated[AsyncSession, fa.Depends(get_session)],
 ):
-    """Send a password reset email. Always returns 200 to prevent email enumeration."""
-
     await verify_turnstile(body.turnstile_token)
 
-    result = await db.execute(
-        select(Site).where(Site.admin_email == body.email, Site.removed_at.is_(None))
-    )
-    site = result.scalar_one_or_none()
-
-    if site is not None:
-        token = create_reset_token(site.tag, site.admin_password)
-        link = f"https://{VARS['main_domain']}/reset-password?token={token}"
-
-        send_mail(
-            to=site.admin_email,
-            subject="Password reset — no-cost.site",
-            body=(
-                f"A password reset was requested for your site '{site.tag}'.\n\n"
-                f"To set a new password, visit the following link:\n{link}\n\n"
-                "If you did not request this, you can safely ignore this e-mail."
-            ),
+    site = await Site.get_by_tag_or_hostname(db, body.site)
+    if site is None:
+        raise fa.HTTPException(
+            status_code=404, detail="No site found with this tag or hostname."
         )
 
-    return {
-        "message": "If an account with that email exists, a reset link has been sent."
-    }
+    token = create_reset_token(site.tag, site.admin_password)
+    link = f"https://{VARS['main_domain']}/reset-password?token={token}"
+
+    send_mail(
+        to=site.admin_email,
+        subject="Password reset — no-cost.site",
+        body=(
+            f"A password reset was requested for your site '{site.tag}'.\n\n"
+            f"To set a new password, visit the following link:\n{link}\n\n"
+            "If you did not request this, you can safely ignore this e-mail."
+        ),
+    )
+
+    return {"message": "A password reset link has been sent to the site's admin email."}
 
 
 @V1_ACCOUNT.post("/reset-password")
@@ -127,16 +119,14 @@ async def reset_password(
     """Set a new password using a valid reset token."""
 
     tag, pfp = decode_reset_token(body.token)
-    result = await db.execute(
-        select(Site).where(Site.tag == tag, Site.removed_at.is_(None))
-    )
-
-    site = result.scalar_one_or_none()
+    site = await Site.get_by_tag_or_hostname(db, tag)
     if site is None:
         raise fa.HTTPException(status_code=404, detail="Site not found")
 
     if pfp != _password_fingerprint(site.admin_password):
-        raise fa.HTTPException(status_code=400, detail="Reset link is invalid or has already been used")
+        raise fa.HTTPException(
+            status_code=400, detail="Reset link is invalid or has already been used"
+        )
 
     site.admin_password = bcrypt.hashpw(
         body.password.encode("utf-8"), bcrypt.gensalt()

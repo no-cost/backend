@@ -103,6 +103,20 @@ class Site(Base):
         return result.scalar_one_or_none()
 
     @classmethod
+    async def get_by_tag_or_hostname(
+        cls, db: AsyncSession, value: str
+    ) -> Site | None:
+        """Get a single active site by tag or hostname."""
+
+        result = await db.execute(
+            select(cls).where(
+                cls.removed_at.is_(None),
+                or_(cls.tag == value, cls.hostname == value),
+            )
+        )
+        return result.scalar_one_or_none()
+
+    @classmethod
     async def get_by_identifier(cls, db: AsyncSession, identifier: str) -> Site | None:
         """Get a single active site matching by tag, email, or hostname."""
 
