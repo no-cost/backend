@@ -6,7 +6,7 @@ from datetime import datetime
 from database.models import Site
 from database.session import async_session_factory
 from site_manager import remove_site as do_remove
-from site_manager.custom_domains import write_nginx_map
+from site_manager.custom_domains import write_nginx_maps
 
 
 async def _main():
@@ -33,7 +33,7 @@ async def _main():
         site.removal_reason = "Removed via CLI"
         await db.commit()
 
-        await write_nginx_map(db)
+        await write_nginx_maps(db)
 
     print(f"Site removed: {site.tag}")
 

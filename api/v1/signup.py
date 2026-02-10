@@ -14,7 +14,7 @@ from database.models import Site
 from database.session import async_session_factory, get_session
 from settings import VARS
 from site_manager import provision_site
-from site_manager.custom_domains import write_nginx_map
+from site_manager.custom_domains import write_nginx_maps
 from utils import random_string, verify_turnstile
 
 V1_SIGNUP = fa.APIRouter(prefix="/signup", tags=["signup"])
@@ -100,4 +100,4 @@ async def _provision_and_finalize(site_tag: str, reset_token: str):
         site.installed_at = datetime.now()
         await db.commit()
 
-        await write_nginx_map(db)
+        await write_nginx_maps(db)

@@ -11,7 +11,7 @@ from database.models import Site
 from database.session import async_session_factory
 from settings import VARS
 from site_manager import provision_site
-from site_manager.custom_domains import write_nginx_map
+from site_manager.custom_domains import write_nginx_maps
 from utils import random_string
 
 
@@ -67,7 +67,7 @@ async def _main():
         site.installed_at = datetime.now()
         await db.commit()
 
-        await write_nginx_map(db)
+        await write_nginx_maps(db)
 
     print(f"Site created: {args.tag} ({hostname})")
     if not args.password:
