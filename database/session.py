@@ -11,6 +11,7 @@ engine = create_async_engine(
     environ["DATABASE_URL"],
     pool_size=20,
     max_overflow=0,
+    pool_pre_ping=True, # ping db to ensure liveness of inactive connections
     echo=False,
 )
 async_session_factory = async_sessionmaker[AsyncSession](
