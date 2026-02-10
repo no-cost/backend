@@ -76,7 +76,6 @@
             dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/usr/lib"
             rsync_opts:
                 - "--link-dest={{ paths.tenants.skeleton_root }}/{{ service_type }}/usr/lib"
-                - "--exclude=*.la"
         delegate_to: localhost
         tags: [always]
 
