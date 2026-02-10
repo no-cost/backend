@@ -62,9 +62,13 @@
   changed_when: true
   tags: [always]
 
+# https://developer.wordpress.org/reference/functions/get_password_reset_key/
 - name: Generate password reset key for admin
   ansible.builtin.command:
-      cmd: wp user reset-password admin --skip-email --porcelain
+      cmd: >
+          wp eval
+          '$user = get_user_by("login", "admin");
+          echo get_password_reset_key($user);'
       chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public"
   become: true
   become_user: "tenant_{{ tenant_tag }}"

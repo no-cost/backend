@@ -29,7 +29,7 @@ async def get_current_site(
     site = site.scalar_one_or_none()
 
     if site is None:
-        raise fa.HTTPException(status_code=401, detail="Site not found")
+        raise fa.HTTPException(status_code=404, detail="Site not found")
 
     return site
 
