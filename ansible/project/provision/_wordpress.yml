@@ -11,6 +11,8 @@
           - "app/public/wp-content/mu-plugins"
           - "app/public/wp-includes"
       exclude_paths:
+          - "app/public/README.md"
+          - "app/public/.gitignore"
           - "app/public/license.txt"
       hardlink_paths:
           - "app/public/index.php"

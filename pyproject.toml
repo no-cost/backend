@@ -1,0 +1,36 @@
+[project]
+name = "nocost-backend"
+version = "1.0.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "pydantic[email]",
+    "ansible",
+    "alembic",
+    "aiomysql",
+    "dnspython",
+    "sqlalchemy[asyncio]",
+    "bcrypt",
+    "httpx",
+    "PyJWT",
+    "uvicorn",
+    "gunicorn",
+    "ansible-runner",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx",
+    "aiosqlite",
+    "pytest",
+    "pytest-asyncio",
+]
+
+[project.scripts]
+backup-site = "cli.backup_site:main"
+create-site = "cli.create_site:main"
+remove-site = "cli.remove_site:main"
+upgrade-site = "cli.upgrade:main"
+
+[tool.setuptools.packages.find]
+where = ["."]

@@ -1,5 +1,0 @@
-httpx
-aiosqlite
-
-pytest
-pytest_asyncio
