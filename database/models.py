@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing as t
 from datetime import datetime
 
-from sqlalchemy import String, func, select
+from sqlalchemy import String, func, or_, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 if t.TYPE_CHECKING:
@@ -85,13 +85,50 @@ class Site(Base):
     async def get_all_active(cls, db: AsyncSession, *additional_filters):
         """Get all active sites as an async iterator."""
 
-        result = await db.stream(select(cls).where(cls.removed_at.is_(None), *additional_filters))
+        result = await db.stream(
+            select(cls).where(cls.removed_at.is_(None), *additional_filters)
+        )
         async for row in result.scalars():
             yield row
 
     @classmethod
-    async def get_by_hostname(cls, db: AsyncSession, hostname: str, *additional_filters) -> Site | None:
+    async def get_by_hostname(
+        cls, db: AsyncSession, hostname: str, *additional_filters
+    ) -> Site | None:
         """Get a site by its hostname."""
 
-        result = await db.execute(select(cls).where(cls.hostname == hostname, *additional_filters))
+        result = await db.execute(
+            select(cls).where(cls.hostname == hostname, *additional_filters)
+        )
         return result.scalar_one_or_none()
+
+    @classmethod
+    async def get_by_identifier(cls, db: AsyncSession, identifier: str) -> Site | None:
+        """Get a single active site matching by tag, email, or hostname."""
+
+        result = await db.execute(
+            select(cls).where(
+                cls.removed_at.is_(None), cls._identifier_filter(identifier)
+            )
+        )
+        return result.scalar_one_or_none()
+
+    @classmethod
+    async def get_all_by_identifier(cls, db: AsyncSession, identifier: str):
+        """Get all active sites matching by tag, email, or hostname as an async iterator."""
+
+        result = await db.stream(
+            select(cls).where(
+                cls.removed_at.is_(None), cls._identifier_filter(identifier)
+            )
+        )
+        async for row in result.scalars():
+            yield row
+
+    @classmethod
+    def _identifier_filter(cls, identifier: str):
+        return or_(
+            cls.tag == identifier,
+            cls.admin_email == identifier,
+            cls.hostname == identifier,
+        )

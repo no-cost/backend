@@ -2,8 +2,6 @@ import argparse
 import asyncio
 import sys
 
-from sqlalchemy import select
-
 from database.models import Site
 from database.session import async_session_factory
 from site_manager import backup_site as do_backup
@@ -11,22 +9,19 @@ from site_manager import backup_site as do_backup
 
 async def _main():
     parser = argparse.ArgumentParser(description="Backup a tenant site")
-    parser.add_argument("tag", help="Unique identifier for the site")
+    parser.add_argument("identifier", help="Site tag, admin email, or hostname")
 
     args = parser.parse_args()
 
     async with async_session_factory() as db:
-        result = await db.execute(
-            select(Site).where(Site.tag == args.tag, Site.removed_at.is_(None))
-        )
-        site = result.scalar_one_or_none()
+        site = await Site.get_by_identifier(db, args.identifier)
 
         if site is None:
-            print(f"Error: active site '{args.tag}' not found", file=sys.stderr)
+            print(f"Error: active site '{args.identifier}' not found", file=sys.stderr)
             sys.exit(1)
 
     do_backup(site, site.site_type)
-    print(f"Site backed up: {args.tag}")
+    print(f"Site backed up: {site.tag}")
 
 
 def main():

@@ -3,8 +3,6 @@ import asyncio
 import sys
 from datetime import datetime
 
-from sqlalchemy import select
-
 from database.models import Site
 from database.session import async_session_factory
 from site_manager import remove_site as do_remove
@@ -13,7 +11,7 @@ from site_manager.custom_domains import write_nginx_map
 
 async def _main():
     parser = argparse.ArgumentParser(description="Remove a tenant site")
-    parser.add_argument("tag", help="Unique identifier for the site")
+    parser.add_argument("identifier", help="Site tag, admin email, or hostname")
     parser.add_argument(
         "--skip-backup",
         action="store_true",
@@ -23,13 +21,10 @@ async def _main():
     args = parser.parse_args()
 
     async with async_session_factory() as db:
-        result = await db.execute(
-            select(Site).where(Site.tag == args.tag, Site.removed_at.is_(None))
-        )
-        site = result.scalar_one_or_none()
+        site = await Site.get_by_identifier(db, args.identifier)
 
         if site is None:
-            print(f"Error: active site '{args.tag}' not found", file=sys.stderr)
+            print(f"Error: active site '{args.identifier}' not found", file=sys.stderr)
             sys.exit(1)
 
         do_remove(site, skip_backup=args.skip_backup)
@@ -40,7 +35,7 @@ async def _main():
 
         await write_nginx_map(db)
 
-    print(f"Site removed: {args.tag}")
+    print(f"Site removed: {site.tag}")
 
 
 def main():
