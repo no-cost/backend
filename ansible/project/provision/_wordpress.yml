@@ -12,6 +12,22 @@
           - "app/public/wp-includes"
       exclude_paths:
           - "app/public/license.txt"
+      hardlink_paths:
+          - "app/public/index.php"
+          - "app/public/secrets.php"
+          - "app/public/wp-activate.php"
+          - "app/public/wp-blog-header.php"
+          - "app/public/wp-comments-post.php"
+          - "app/public/wp-config.php"
+          - "app/public/wp-cron.php"
+          - "app/public/wp-links-opml.php"
+          - "app/public/wp-load.php"
+          - "app/public/wp-login.php"
+          - "app/public/wp-mail.php"
+          - "app/public/wp-settings.php" # common loader for all tenants
+          - "app/public/wp-signup.php"
+          - "app/public/wp-trackback.php"
+          - "app/public/xmlrpc.php"
       service_type: "wordpress"
   tags: [always]
 

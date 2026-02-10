@@ -1,7 +1,6 @@
 ---
 # root in /app/public/
 
-# TODO: hardlink files, check if `resources/` can be mounted read-only
 - name: Copy skeleton structure and mount MediaWiki core directories
   ansible.builtin.include_tasks: ../helpers/copy_structure.yml
   vars:
@@ -9,19 +8,36 @@
           - "app/public/extensions"
           - "app/public/includes"
           - "app/public/languages"
+          - "app/public/maintenance"
+          - "app/public/mw-config"
+          - "app/public/resources"
           - "app/public/skins"
           - "app/public/sql"
           - "app/public/vendor"
       exclude_paths:
+          - "app/public/.gitignore"
           - "app/public/CODE_OF_CONDUCT.md"
-          - "app/public/COPYING.md"
-          - "app/public/CREDITS.md"
+          - "app/public/COPYING"
+          - "app/public/CREDITS"
           - "app/public/README.md"
           - "app/public/UPGRADE"
-          - "app/public/bundlesize.config.js"
+          - "app/public/bundlesize.config.json"
           - "app/public/composer.json"
           - "app/public/composer.local.json"
           - "app/public/composer.lock"
+          - "app/public/LocalSettings_temp.php" # hardlinked as LocalSettings.php after install
+      hardlink_paths:
+          - "app/public/api.php"
+          - "app/public/autoload.php"
+          - "app/public/img_auth.php"
+          - "app/public/index.php"
+          - "app/public/load.php"
+          - "app/public/modules.php"
+          - "app/public/opensearch_desc.php"
+          - "app/public/rest.php"
+          - "app/public/secrets.php"
+          - "app/public/thumb.php"
+          - "app/public/thumb_handler.php"
       service_type: "mediawiki"
   tags: [always]
 
@@ -48,6 +64,14 @@
   changed_when: true
   tags: [always]
 
+- name: Replace install-generated LocalSettings.php with hardlink from skeleton
+  ansible.builtin.file:
+      src: "{{ paths.tenants.skeleton_root }}/mediawiki/app/public/LocalSettings.common.php"
+      dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public/LocalSettings.php"
+      state: hard
+      force: true
+  tags: [always]
+
 - name: Run MediaWiki update script
   ansible.builtin.shell:
       cmd: "php maintenance/run.php update --quick"
@@ -55,12 +79,6 @@
   become: true
   become_user: "tenant_{{ tenant_tag }}"
   changed_when: true
-  tags: [always]
-
-- name: Overwrite LocalSettings.php
-  ansible.builtin.command:
-      cmd: mv --force LocalSettings_temp.php LocalSettings.php
-      chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/public"
   tags: [always]
 
 - name: Generate temporary password for admin

@@ -1,7 +1,6 @@
 ---
 # root in /app/
 
-# TODO: hardlink extend.php
 - name: Copy skeleton structure and mount vendor
   ansible.builtin.include_tasks: ../helpers/copy_structure.yml
   vars:
@@ -12,6 +11,15 @@
           - "app/README.md"
           - "app/composer.json"
           - "app/composer.lock"
+          - "app/public/.htaccess"
+          - "app/public/web.config"
+          # hardlinked as config.php after install
+          - "app/config_temp.php"
+      hardlink_paths:
+          - "app/extend.php"
+          - "app/flarum"
+          - "app/site.php"
+          - "app/public/index.php"
       service_type: "flarum"
   tags: [always]
 
@@ -44,12 +52,14 @@
       state: absent
   tags: [always]
 
-# it can't be config.php from the start, because that makes the install command unavailable:
+# config.php can't exist before install, because Flarum disables the install command when that file is present:
 # https://github.com/no-cost/flarum-multitenant/blob/2bd2da87c539cb187040ff84c7b06988dc6e17e3/vendor/flarum/core/src/Foundation/Site.php#L27-L34
-- name: Move config_temp.php to config.php
-  ansible.builtin.command:
-      cmd: mv config_temp.php config.php
-      chdir: "{{ paths.tenants.root }}/{{ tenant_tag }}/app"
+- name: Hardlink config.common.php as config.php from skeleton
+  ansible.builtin.file:
+      src: "{{ paths.tenants.skeleton_root }}/flarum/app/config.common.php"
+      dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/config.php"
+      state: hard
+      force: true
   tags: [always]
 
 - name: Generate password reset token for admin

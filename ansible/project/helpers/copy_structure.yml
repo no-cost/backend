@@ -3,13 +3,15 @@
 #
 #   - mount_paths: array of paths to bind-mount (read-only), empty for none
 #   - exclude_paths: array of paths to exclude from sync completely
+#   - hardlink_paths: array of paths to hardlink from skeleton (excluded from sync automatically)
 #   - service_type: flarum|mediawiki|wordpress (to determine skeleton dir)
 
 - name: Build exclude list for rsync
   ansible.builtin.set_fact:
       rsync_excludes: "{{
           (mount_paths | default([]) | map('regex_replace', '^', '--exclude=/') | list) +
-          (exclude_paths | default([]) | map('regex_replace', '^', '--exclude=/') | list)
+          (exclude_paths | default([]) | map('regex_replace', '^', '--exclude=/') | list) +
+          (hardlink_paths | default([]) | map('regex_replace', '^', '--exclude=/') | list)
           }}"
   tags: [always]
 
@@ -78,4 +80,15 @@
   loop: "{{ mount_paths | default([]) }}"
   loop_control:
       loop_var: mount_dir_rel
+  tags: [always]
+
+- name: Hardlink shared files from skeleton
+  ansible.builtin.file:
+      src: "{{ paths.tenants.skeleton_root }}/{{ service_type }}/{{ hardlink_file }}"
+      dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/{{ hardlink_file }}"
+      state: hard
+      force: true
+  loop: "{{ hardlink_paths | default([]) }}"
+  loop_control:
+      loop_var: hardlink_file
   tags: [always]
