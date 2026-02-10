@@ -19,18 +19,9 @@ async def get_current_site(
     token: t.Annotated[str, fa.Depends(oauth2_scheme)],
     db: t.Annotated[AsyncSession, fa.Depends(get_session)],
 ) -> Site:
-    """Dependency that extracts the JWT, validates it, and returns the Site."""
+    """Dependency that extracts the JWT, validates it, and returns the Site associated with the token."""
 
-    try:
-        payload = jwt.decode(token, VARS["jwt_secret"], algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        raise fa.HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise fa.HTTPException(status_code=401, detail="Invalid token")
-
-    tag: str | None = payload.get("sub")
-    if tag is None:
-        raise fa.HTTPException(status_code=401, detail="Invalid token")
+    tag = decode_access_token(token)
 
     site = await db.execute(
         select(Site).where(Site.tag == tag, Site.removed_at.is_(None))
@@ -52,6 +43,21 @@ def create_access_token(site_tag: str) -> str:
     )
 
 
+def decode_access_token(token: str) -> str:
+    try:
+        payload = jwt.decode(token, VARS["jwt_secret"], algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        raise fa.HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise fa.HTTPException(status_code=401, detail="Invalid token")
+
+    tag: str | None = payload.get("sub")
+    if tag is None:
+        raise fa.HTTPException(status_code=401, detail="Invalid token")
+
+    return tag
+
+
 def create_reset_token(site_tag: str) -> str:
     expires = datetime.now(timezone.utc) + timedelta(hours=48)
     return jwt.encode(
@@ -62,8 +68,6 @@ def create_reset_token(site_tag: str) -> str:
 
 
 def decode_reset_token(token: str) -> str:
-    """Decode a password reset JWT and return the site tag."""
-
     try:
         payload = jwt.decode(token, VARS["jwt_secret"], algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
