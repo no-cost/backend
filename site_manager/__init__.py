@@ -35,16 +35,16 @@ async def upgrade_site(
             await run_cmd(
                 "php flarum cache:clear",
                 user=tenant_user,
-                chdir=tenant_root / "app",  # flarum root is in /app/
+                cwd=tenant_root / "app",  # flarum root is in /app/
             )
         case "mediawiki":
             await run_cmd(
                 "php maintenance/run.php update --quick",
                 user=tenant_user,
-                chdir=tenant_pub_dir,
+                cwd=tenant_pub_dir,
             )
         case "wordpress":
-            await run_cmd("wp cache flush", user=tenant_user, chdir=tenant_pub_dir)
+            await run_cmd("wp cache flush", user=tenant_user, cwd=tenant_pub_dir)
 
 
 def remove_site(
