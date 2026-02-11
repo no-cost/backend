@@ -3,7 +3,7 @@ import asyncio
 import sys
 
 from database.models import Site
-from database.session import async_session_factory
+from database.session import async_session_factory, engine
 from site_manager import backup_site as do_backup
 
 
@@ -13,15 +13,18 @@ async def _main():
 
     args = parser.parse_args()
 
-    async with async_session_factory() as db:
-        site = await Site.get_by_identifier(db, args.identifier)
+    try:
+        async with async_session_factory() as db:
+            site = await Site.get_by_identifier(db, args.identifier)
 
-        if site is None:
-            print(f"Error: active site '{args.identifier}' not found", file=sys.stderr)
-            sys.exit(1)
+            if site is None:
+                print(f"Error: active site '{args.identifier}' not found", file=sys.stderr)
+                sys.exit(1)
 
-    do_backup(site, site.site_type)
-    print(f"Site backed up: {site.tag}")
+        do_backup(site, site.site_type)
+        print(f"Site backed up: {site.tag}")
+    finally:
+        await engine.dispose()
 
 
 def main():

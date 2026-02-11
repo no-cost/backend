@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 
 from api.v1.auth import create_reset_token
 from database.models import Site
-from database.session import async_session_factory
+from database.session import async_session_factory, engine
 from settings import VARS
 from site_manager import provision_site
 from site_manager.custom_domains import write_nginx_maps
@@ -45,33 +45,36 @@ async def _main():
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     hostname = f"{args.tag}.{args.domain}"
 
-    async with async_session_factory() as db:
-        site = Site(
-            tag=args.tag,
-            admin_email=args.admin_email,
-            admin_password=hashed,
-            site_type=args.service_type,
-            hostname=hostname,
-        )
+    try:
+        async with async_session_factory() as db:
+            site = Site(
+                tag=args.tag,
+                admin_email=args.admin_email,
+                admin_password=hashed,
+                site_type=args.service_type,
+                hostname=hostname,
+            )
 
-        try:
-            db.add(site)
+            try:
+                db.add(site)
+                await db.commit()
+            except IntegrityError:
+                print(f"Error: site '{args.tag}' already exists", file=sys.stderr)
+                sys.exit(1)
+
+            reset_token = create_reset_token(site.tag, site.admin_password)
+            provision_site(site, reset_token, force=args.force)
+
+            site.installed_at = datetime.now()
             await db.commit()
-        except IntegrityError:
-            print(f"Error: site '{args.tag}' already exists", file=sys.stderr)
-            sys.exit(1)
 
-        reset_token = create_reset_token(site.tag, site.admin_password)
-        provision_site(site, reset_token, force=args.force)
+            await write_nginx_maps(db)
 
-        site.installed_at = datetime.now()
-        await db.commit()
-
-        await write_nginx_maps(db)
-
-    print(f"Site created: {args.tag} ({hostname})")
-    if not args.password:
-        print(f"Generated admin password: {password}")
+        print(f"Site created: {args.tag} ({hostname})")
+        if not args.password:
+            print(f"Generated admin password: {password}")
+    finally:
+        await engine.dispose()
 
 
 def main():

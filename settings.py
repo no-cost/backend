@@ -3,6 +3,7 @@ Interface for getting settings from environment variables.
 """
 
 from os import environ
+from pathlib import Path
 
 allowed_domains = environ["ALLOWED_DOMAINS"].split(",")
 
@@ -17,10 +18,10 @@ VARS = {
     "turnstile_key": environ["TURNSTILE_KEY"],
     "paths": {
         "tenants": {
-            "root": environ["TENANTS_ROOT"],
-            "skeleton_root": environ["SKELETON_ROOT"],
+            "root": Path(environ["TENANTS_ROOT"]),
+            "skeleton_root": Path(environ["SKELETON_ROOT"]),
         },
-        "backup_host_root": environ["BACKUP_HOST_ROOT"],
-        "backup_attic_root": environ["BACKUP_ATTIC_ROOT"],
+        "backup_host_root": Path(environ["BACKUP_HOST_ROOT"]),
+        "backup_attic_root": Path(environ["BACKUP_ATTIC_ROOT"]),
     },
 }

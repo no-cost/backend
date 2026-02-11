@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 
 from database.models import Site
-from database.session import async_session_factory
+from database.session import async_session_factory, engine
 from site_manager import remove_site as do_remove
 from site_manager.custom_domains import write_nginx_maps
 
@@ -20,22 +20,25 @@ async def _main():
 
     args = parser.parse_args()
 
-    async with async_session_factory() as db:
-        site = await Site.get_by_identifier(db, args.identifier)
+    try:
+        async with async_session_factory() as db:
+            site = await Site.get_by_identifier(db, args.identifier)
 
-        if site is None:
-            print(f"Error: active site '{args.identifier}' not found", file=sys.stderr)
-            sys.exit(1)
+            if site is None:
+                print(f"Error: active site '{args.identifier}' not found", file=sys.stderr)
+                sys.exit(1)
 
-        do_remove(site, skip_backup=args.skip_backup)
+            do_remove(site, skip_backup=args.skip_backup)
 
-        site.removed_at = datetime.now()
-        site.removal_reason = "Removed via CLI"
-        await db.commit()
+            site.removed_at = datetime.now()
+            site.removal_reason = "Removed via CLI"
+            await db.commit()
 
-        await write_nginx_maps(db)
+            await write_nginx_maps(db)
 
-    print(f"Site removed: {site.tag}")
+        print(f"Site removed: {site.tag}")
+    finally:
+        await engine.dispose()
 
 
 def main():
