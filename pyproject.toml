@@ -18,6 +18,7 @@ dependencies = [
     "gunicorn",
     "ansible-runner",
     "python-dotenv",
+    "geoip2",
 ]
 
 [project.optional-dependencies]
@@ -29,11 +30,12 @@ dev = [
 ]
 
 [project.scripts]
-backup-site = "cli.backup_site:main"
-create-site = "cli.create_site:main"
-remove-site = "cli.remove_site:main"
-upgrade-site = "cli.upgrade:main"
-make-donor = "cli.make_donor:main"
+backupsite = "cli.backup_site:main"
+createsite = "cli.create_site:main"
+removesite = "cli.remove_site:main"
+makedonor = "cli.make_donor:main"
+siteinfo = "cli.site_info:main"
+upgradesite = "cli.upgrade:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
