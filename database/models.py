@@ -48,7 +48,7 @@ class Site(Base):
     last_login_at: Mapped[datetime] = mapped_column(nullable=True)
 
     # misc
-    donated_amount: Mapped[float] = mapped_column(nullable=True)
+    donated_amount: Mapped[float] = mapped_column(default=0.0, server_default='0')
     """Donations are per site/account, in EUR"""
 
     # timestamps
@@ -74,7 +74,7 @@ class Site(Base):
 
     def is_donor(self) -> bool:
         """Returns whether the site admin has donated"""
-        return self.donated_amount is not None and self.donated_amount > 0.0
+        return self.donated_amount > 0.0
 
     def has_perks(self) -> bool:
         """Returns whether the site admin has donated enough to have perks (such as the footer removed)"""

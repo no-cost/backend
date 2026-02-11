@@ -53,6 +53,7 @@ class ResetPasswordBody(BaseModel):
 
 @V1_ACCOUNT.post("/login", response_model=LoginResponse)
 async def login(
+    fastapi_request: fa.Request,
     request: LoginRequest,
     db: t.Annotated[AsyncSession, fa.Depends(get_session)],
 ):
@@ -62,6 +63,7 @@ async def login(
         raise fa.HTTPException(status_code=401, detail="Invalid credentials")
 
     site.last_login_at = datetime.now()
+    site.last_login_ip = fastapi_request.client.host
     await db.commit()
 
     return LoginResponse(token=create_access_token(site.tag))

@@ -41,6 +41,7 @@ class SignupResponse(BaseModel):
 
 @V1_SIGNUP.post("/", response_model=SignupResponse)
 async def signup(
+    fastapi_request: fa.Request,
     request: SignupRequest,
     background_tasks: BackgroundTasks,
     db: t.Annotated[AsyncSession, fa.Depends(get_session)],
@@ -75,6 +76,7 @@ async def signup(
         admin_email=request.email,
         admin_password=throwaway_password,
         site_type=request.site_type,
+        created_ip=fastapi_request.client.host,
         hostname=f"{request.tag}.{request.parent_domain}",
     )
 
