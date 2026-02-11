@@ -63,7 +63,9 @@ async def _main():
                 sys.exit(1)
 
             reset_token = create_reset_token(site.tag, site.admin_password)
-            provision_site(site, reset_token, force=args.force)
+            runner = provision_site(site, reset_token, force=args.force)
+            print(runner.stdout.read())
+            print(runner.stderr.read())
 
             site.installed_at = datetime.now()
             await db.commit()

@@ -28,7 +28,9 @@ async def _main():
                 print(f"Error: active site '{args.identifier}' not found", file=sys.stderr)
                 sys.exit(1)
 
-            do_remove(site, skip_backup=args.skip_backup)
+            runner = do_remove(site, skip_backup=args.skip_backup)
+            print(runner.stdout.read())
+            print(runner.stderr.read())
 
             site.removed_at = datetime.now()
             site.removal_reason = "Removed via CLI"

@@ -12,8 +12,8 @@ def provision_site(
     site: Site,
     reset_token: str,
     force: bool = False,
-) -> None:
-    provision_tenant(
+):
+    return provision_tenant(
         tenant_tag=site.tag,
         service_type=site.site_type,
         hostname=site.hostname,
@@ -56,8 +56,8 @@ async def upgrade_site(
 def remove_site(
     site: Site,
     skip_backup: bool = False,
-) -> None:
-    remove_tenant(
+):
+    return remove_tenant(
         tenant_tag=site.tag,
         service_type=site.site_type,
         skip_backup=skip_backup,
@@ -67,9 +67,9 @@ def remove_site(
 def backup_site(
     site: Site,
     service_type: str,
-) -> None:
+):
     # TODO: do this from Python side, no need for Ansible?
-    backup_tenant(
+    return backup_tenant(
         tenant_tag=site.tag,
         service_type=service_type,
     )

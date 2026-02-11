@@ -21,7 +21,9 @@ async def _main():
                 print(f"Error: active site '{args.identifier}' not found", file=sys.stderr)
                 sys.exit(1)
 
-        do_backup(site, site.site_type)
+        runner = do_backup(site, site.site_type)
+        print(runner.stdout.read())
+        print(runner.stderr.read())
         print(f"Site backed up: {site.tag}")
     finally:
         await engine.dispose()
