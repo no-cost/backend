@@ -76,7 +76,7 @@ async def signup(
         admin_email=request.email,
         admin_password=throwaway_password,
         site_type=request.site_type,
-        created_ip=fastapi_request.client.host,
+        created_ip=fastapi_request.client.host if fastapi_request.client else None,
         hostname=f"{request.tag}.{request.parent_domain}",
     )
 

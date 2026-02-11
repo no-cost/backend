@@ -63,7 +63,7 @@ async def login(
         raise fa.HTTPException(status_code=401, detail="Invalid credentials")
 
     site.last_login_at = datetime.now()
-    site.last_login_ip = fastapi_request.client.host
+    site.last_login_ip = fastapi_request.client.host if fastapi_request.client else None
     await db.commit()
 
     return LoginResponse(token=create_access_token(site.tag))
