@@ -15,7 +15,7 @@ from database.session import async_session_factory, get_session
 from settings import VARS
 from site_manager import provision_site
 from site_manager.custom_domains import write_nginx_maps
-from utils import random_string, validate_tag, verify_turnstile
+from utils import get_client_ip, random_string, validate_tag, verify_turnstile
 
 V1_SIGNUP = fa.APIRouter(prefix="/signup", tags=["signup"])
 
@@ -41,10 +41,10 @@ class SignupResponse(BaseModel):
 
 @V1_SIGNUP.post("/", response_model=SignupResponse)
 async def signup(
-    fastapi_request: fa.Request,
     request: SignupRequest,
     background_tasks: BackgroundTasks,
     db: t.Annotated[AsyncSession, fa.Depends(get_session)],
+    client_ip: t.Annotated[str | None, fa.Depends(get_client_ip)],
 ):
     """
     Create and install a new site.
@@ -76,7 +76,7 @@ async def signup(
         admin_email=request.email,
         admin_password=throwaway_password,
         site_type=request.site_type,
-        created_ip=fastapi_request.client.host if fastapi_request.client else None,
+        created_ip=client_ip,
         hostname=f"{request.tag}.{request.parent_domain}",
     )
 

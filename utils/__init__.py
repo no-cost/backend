@@ -2,10 +2,18 @@ import re
 import secrets
 
 from utils.cmd import run_cmd
+from utils.ip import get_client_ip
 from utils.mail import send_mail
 from utils.turnstile import verify_turnstile
 
-__all__ = ["run_cmd", "send_mail", "verify_turnstile", "random_string", "validate_tag"]
+__all__ = [
+    "run_cmd",
+    "send_mail",
+    "verify_turnstile",
+    "random_string",
+    "validate_tag",
+    "get_client_ip",
+]
 
 TAG_PATTERN = re.compile(r"^[a-zA-Z0-9_]+$")
 

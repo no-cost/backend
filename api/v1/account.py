@@ -17,7 +17,7 @@ from api.v1.auth import (
 from database.models import Site
 from database.session import get_session
 from settings import VARS
-from utils import send_mail, verify_turnstile
+from utils import get_client_ip, send_mail, verify_turnstile
 
 V1_ACCOUNT = fa.APIRouter(prefix="/account", tags=["account"])
 
@@ -53,9 +53,9 @@ class ResetPasswordBody(BaseModel):
 
 @V1_ACCOUNT.post("/login", response_model=LoginResponse)
 async def login(
-    fastapi_request: fa.Request,
     request: LoginRequest,
     db: t.Annotated[AsyncSession, fa.Depends(get_session)],
+    client_ip: t.Annotated[str | None, fa.Depends(get_client_ip)],
 ):
     site = await Site.get_by_tag_or_hostname(db, request.username)
 
@@ -63,7 +63,7 @@ async def login(
         raise fa.HTTPException(status_code=401, detail="Invalid credentials")
 
     site.last_login_at = datetime.now()
-    site.last_login_ip = fastapi_request.client.host if fastapi_request.client else None
+    site.last_login_ip = client_ip
     await db.commit()
 
     return LoginResponse(token=create_access_token(site.tag))
