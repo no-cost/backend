@@ -12,7 +12,7 @@ from database.session import async_session_factory, engine
 from settings import VARS
 from site_manager import provision_site
 from site_manager.custom_domains import write_nginx_maps
-from utils import random_string
+from utils import random_string, validate_tag
 
 
 async def _main():
@@ -41,6 +41,13 @@ async def _main():
     )
 
     args = parser.parse_args()
+
+    try:
+        args.tag = validate_tag(args.tag)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
     password = args.password or random_string(16)
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     hostname = f"{args.tag}.{args.domain}"

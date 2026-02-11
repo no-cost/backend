@@ -5,7 +5,7 @@ from datetime import datetime
 import bcrypt
 import fastapi as fa
 from fastapi import BackgroundTasks
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +15,7 @@ from database.session import async_session_factory, get_session
 from settings import VARS
 from site_manager import provision_site
 from site_manager.custom_domains import write_nginx_maps
-from utils import random_string, verify_turnstile
+from utils import random_string, validate_tag, verify_turnstile
 
 V1_SIGNUP = fa.APIRouter(prefix="/signup", tags=["signup"])
 
@@ -26,6 +26,11 @@ class SignupRequest(BaseModel):
     site_type: str
     parent_domain: str
     turnstile_token: str
+
+    @field_validator("tag")
+    @classmethod
+    def tag_must_be_alphanumeric(cls, v: str) -> str:
+        return validate_tag(v)
 
 
 class SignupResponse(BaseModel):
