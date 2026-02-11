@@ -33,9 +33,14 @@ async def upgrade_site(
     match site.site_type:
         case "flarum":
             await run_cmd(
-                "php flarum cache:clear",
+                "php flarum migrate",
                 user=tenant_user,
                 cwd=tenant_root / "app",  # flarum root is in /app/
+            )
+            await run_cmd(
+                "php flarum cache:clear",
+                user=tenant_user,
+                cwd=tenant_root / "app",
             )
         case "mediawiki":
             await run_cmd(
@@ -45,6 +50,7 @@ async def upgrade_site(
             )
         case "wordpress":
             await run_cmd("wp cache flush", user=tenant_user, cwd=tenant_pub_dir)
+            await run_cmd("wp core update-db", user=tenant_user, cwd=tenant_pub_dir)
 
 
 def remove_site(
