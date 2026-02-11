@@ -32,6 +32,7 @@ backup-site = "cli.backup_site:main"
 create-site = "cli.create_site:main"
 remove-site = "cli.remove_site:main"
 upgrade-site = "cli.upgrade:main"
+make-donor = "cli.make_donor:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

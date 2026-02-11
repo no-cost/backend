@@ -10,5 +10,6 @@
     "password": "{{ _tenant_db_password }}",
     "prefix": ""
   },
+  "donated_amount": 0.00,
   "url": "https://{{ tenant_hostname }}"
 }

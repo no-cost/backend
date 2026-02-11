@@ -24,4 +24,6 @@ VARS = {
         "backup_host_root": environ["BACKUP_HOST_ROOT"],
         "backup_attic_root": environ["BACKUP_ATTIC_ROOT"],
     },
+    "info_mail": environ["MAILTO"],
+    "kofi_verification_token": environ["KOFI_VERIFICATION_TOKEN"],
 }
