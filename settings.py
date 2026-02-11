@@ -3,10 +3,10 @@ Interface for getting settings from environment variables.
 """
 
 from os import environ
-from pathlib import Path
 
 allowed_domains = environ["ALLOWED_DOMAINS"].split(",")
 
+# leaf keys must be strings, or else ansible_runner can't serialize them
 VARS = {
     "allowed_domains": allowed_domains,
     "available_site_types": ["flarum", "mediawiki", "wordpress"],
@@ -18,10 +18,10 @@ VARS = {
     "turnstile_key": environ["TURNSTILE_KEY"],
     "paths": {
         "tenants": {
-            "root": Path(environ["TENANTS_ROOT"]),
-            "skeleton_root": Path(environ["SKELETON_ROOT"]),
+            "root": environ["TENANTS_ROOT"],
+            "skeleton_root": environ["SKELETON_ROOT"],
         },
-        "backup_host_root": Path(environ["BACKUP_HOST_ROOT"]),
-        "backup_attic_root": Path(environ["BACKUP_ATTIC_ROOT"]),
+        "backup_host_root": environ["BACKUP_HOST_ROOT"],
+        "backup_attic_root": environ["BACKUP_ATTIC_ROOT"],
     },
 }

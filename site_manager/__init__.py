@@ -1,4 +1,5 @@
 from database.models import Site
+from pathlib import Path
 from settings import VARS
 from site_manager.runner import (
     backup_tenant,
@@ -26,7 +27,7 @@ def provision_site(
 async def upgrade_site(
     site: Site,
 ) -> None:
-    tenant_root = VARS["paths"]["tenants"]["root"] / site.tag
+    tenant_root = Path(VARS["paths"]["tenants"]["root"]) / site.tag
     tenant_pub_dir = tenant_root / "public"
     tenant_user = f"tenant_{site.tag}"
 
