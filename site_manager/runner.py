@@ -81,7 +81,7 @@ def remove_tenant(
     """
 
     return run_playbook(
-        "removal_main.yml",
+        "backup_main.yml",
         extravars={
             "tenant_tag": tenant_tag,
             "service_type": service_type,
@@ -99,7 +99,7 @@ def backup_tenant(
     """
 
     return run_playbook(
-        "removal_main.yml",
+        "backup_main.yml",
         tags="backup",
         extravars={
             "tenant_tag": tenant_tag,

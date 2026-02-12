@@ -69,7 +69,6 @@ def backup_site(
     site: Site,
     service_type: str,
 ):
-    # TODO: do this from Python side, no need for Ansible?
     return backup_tenant(
         tenant_tag=site.tag,
         service_type=service_type,

@@ -31,11 +31,11 @@
 
       # optional backup
       - name: Backup tenant data
-        ansible.builtin.include_tasks: ./removal/_backup.yml
+        ansible.builtin.include_tasks: ./backup/_backup.yml
         when: not (skip_backup | default(false) | bool)
         tags: [backup]
 
       # hard delete
       - name: Cleanup tenant resources
-        ansible.builtin.include_tasks: ./removal/_cleanup.yml
+        ansible.builtin.include_tasks: ./backup/_cleanup.yml
         tags: [cleanup]
