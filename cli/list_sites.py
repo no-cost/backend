@@ -98,8 +98,8 @@ async def _main():
         sites = [
             s
             for s in sites
-            if get_country_code(s.created_ip) == cc
-            or get_country_code(s.last_login_ip) == cc
+            if (s.created_ip is not None and get_country_code(s.created_ip) == cc)
+            or (s.last_login_ip is not None and get_country_code(s.last_login_ip) == cc)
         ]
 
     if args.has_backup:
