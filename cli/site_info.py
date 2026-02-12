@@ -22,14 +22,18 @@ async def _main():
                 sys.exit(1)
 
         created_cc = get_country_code(site.created_ip) if site.created_ip else None
-        last_login_cc = get_country_code(site.last_login_ip) if site.last_login_ip else None
+        last_login_cc = (
+            get_country_code(site.last_login_ip) if site.last_login_ip else None
+        )
 
         print(f"tag:            {site.tag} ({site.site_type})")
         print(f"admin_email:    {site.admin_email}")
         print(f"hostname:       {site.hostname}")
         print()
         print(f"created_at:     {site.created_at}")
-        print(f"created_ip:     {site.created_ip or 'N/A'}{f' ({created_cc})' if created_cc else ''}")
+        print(
+            f"created_ip:     {site.created_ip or 'N/A'}{f' ({created_cc})' if created_cc else ''}"
+        )
         print(f"installed:      {site.installed_at or 'not yet (or failed)'}")
         print()
         print(f"last_login_at:  {site.last_login_at or 'never'}")
