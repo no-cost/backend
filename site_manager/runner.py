@@ -71,6 +71,10 @@ def remove_tenant(
     tenant_tag: str,
     service_type: str,
     skip_backup: bool = False,
+    send_email: bool = True,
+    admin_email: str | None = None,
+    hostname: str | None = None,
+    reason: str | None = None,
 ) -> Runner:
     """Remove a tenant using Ansible."""
 
@@ -80,6 +84,10 @@ def remove_tenant(
             "tenant_tag": tenant_tag,
             "service_type": service_type,
             "skip_backup": skip_backup,
+            "send_email": send_email,
+            "tenant_admin_email": admin_email or "",
+            "tenant_hostname": hostname or "",
+            "removal_reason": reason or "",
         },
     )
 

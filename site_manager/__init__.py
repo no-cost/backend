@@ -60,11 +60,17 @@ async def upgrade_site(
 def remove_site(
     site: Site,
     skip_backup: bool = False,
+    send_email: bool = True,
+    reason: str | None = None,
 ):
     return remove_tenant(
         tenant_tag=site.tag,
         service_type=site.site_type,
         skip_backup=skip_backup,
+        send_email=send_email,
+        admin_email=site.admin_email,
+        hostname=site.hostname,
+        reason=reason,
     )
 
 

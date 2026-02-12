@@ -32,10 +32,12 @@ async def delete_site(
     Remove the authenticated user's site. Does not create a backup.
     """
 
-    background_tasks.add_task(remove_site, site, skip_backup=True)
-
     site.removed_at = datetime.now()
     site.removal_reason = "User requested"
+
+    background_tasks.add_task(
+        remove_site, site, skip_backup=True, reason=site.removal_reason
+    )
     await db.commit()
 
     return {"message": "Site removed successfully"}

@@ -3,6 +3,10 @@
 #   - service_type: flarum|mediawiki|wordpress
 #   - skip_backup: boolean (default false)
 #   - delete_older_than_days: int (default 7, negative to disable)
+#   - send_email: boolean (default false) — notify admin about removal
+#   - tenant_admin_email: string (required when send_email is true)
+#   - tenant_hostname: string (required when send_email is true)
+#   - removal_reason: string (optional, included in removal email)
 
 - name: Backup (and optionally remove) tenant
   hosts: localhost
@@ -50,4 +54,23 @@
       # hard delete
       - name: Cleanup tenant resources
         ansible.builtin.include_tasks: ./backup/_cleanup.yml
+        tags: ["cleanup"]
+
+      - name: Send removal notification email
+        community.general.mail:
+            host: "127.0.0.1"
+            to: "{{ tenant_admin_email }}"
+            subject: "Your site has been removed"
+            body: |
+                Your site at https://{{ tenant_hostname }} has been removed.
+                {% if removal_reason | default('') | length > 0 %}
+
+                Reason: {{ removal_reason }}
+                {% endif %}
+
+                If you believe this was a mistake, please contact us by replying to this e-mail.
+                There is a chance that we have backed up your site and can restore it for you.
+            from: "noreply@{{ main_domain }}"
+        failed_when: false
+        when: send_email | default(false) | bool
         tags: ["cleanup"]

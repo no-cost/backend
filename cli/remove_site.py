@@ -17,6 +17,16 @@ async def _main():
         action="store_true",
         help="Skip backup before removal (for GDPR full deletion)",
     )
+    parser.add_argument(
+        "--no-email",
+        action="store_true",
+        help="Do not send removal notification email",
+    )
+    parser.add_argument(
+        "--reason",
+        default=None,
+        help="Reason for removal (default is no reason)",
+    )
 
     args = parser.parse_args()
 
@@ -30,12 +40,17 @@ async def _main():
                 )
                 sys.exit(1)
 
-            runner = do_remove(site, skip_backup=args.skip_backup)
+            runner = do_remove(
+                site,
+                skip_backup=args.skip_backup,
+                send_email=not args.no_email,
+                reason=args.reason,
+            )
             print(runner.stdout.read())
             print(runner.stderr.read())
 
             site.removed_at = datetime.now()
-            site.removal_reason = "Removed via CLI"
+            site.removal_reason = args.reason
             await db.commit()
 
             await write_nginx_maps(db)
