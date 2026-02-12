@@ -93,9 +93,9 @@ async def request_password_reset(
 
     site = await Site.get_by_tag_or_hostname(db, body.site)
     if site is None:
-        raise fa.HTTPException(
-            status_code=404, detail="No site found with this tag or hostname."
-        )
+        return {
+            "message": "If a site with this identifier exists, a password reset link has been sent to the site's admin email."
+        }
 
     token = create_reset_token(site.tag, site.admin_password)
     link = f"https://{VARS['main_domain']}/reset-password?token={token}"
@@ -110,7 +110,9 @@ async def request_password_reset(
         ),
     )
 
-    return {"message": "A password reset link has been sent to the site's admin email."}
+    return {
+        "message": "If a site with this identifier exists, a password reset link has been sent to the site's admin email."
+    }
 
 
 @V1_ACCOUNT.post("/reset-password")
