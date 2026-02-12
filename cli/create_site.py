@@ -6,13 +6,13 @@ from datetime import datetime
 import bcrypt
 from sqlalchemy.exc import IntegrityError
 
-from api.v1.auth import create_reset_token
 from database.models import Site
 from database.session import async_session_factory, engine
 from settings import VARS
 from site_manager import provision_site
 from site_manager.custom_domains import write_nginx_maps
 from utils import random_string, validate_tag
+from utils.auth import create_reset_token
 
 
 async def _main():

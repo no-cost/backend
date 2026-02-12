@@ -9,13 +9,13 @@ from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.v1.auth import create_reset_token
 from database.models import Site
 from database.session import async_session_factory, get_session
 from settings import VARS
 from site_manager import provision_site
 from site_manager.custom_domains import write_nginx_maps
 from utils import get_client_ip, random_string, validate_tag, verify_turnstile
+from utils.auth import create_reset_token
 
 V1_SIGNUP = fa.APIRouter(prefix="/signup", tags=["signup"])
 
