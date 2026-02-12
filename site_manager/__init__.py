@@ -1,5 +1,6 @@
-from database.models import Site
 from pathlib import Path
+
+from database.models import Site
 from settings import VARS
 from site_manager.runner import (
     backup_tenant,
@@ -78,12 +79,16 @@ def backup_site(
     site: Site,
     periodic: bool = False,
     delete_older_than_days: int = 7,
+    additional_excludes: list[str] = [],
+    backup_dir: str | None = None,
 ):
     return backup_tenant(
         tenant_tag=site.tag,
         service_type=site.site_type,
         periodic=periodic,
         delete_older_than_days=delete_older_than_days,
+        additional_excludes=additional_excludes,
+        backup_dir=backup_dir,
     )
 
 

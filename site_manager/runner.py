@@ -98,19 +98,24 @@ def backup_tenant(
     periodic: bool = False,
     delete_older_than_days: int = 7,
     additional_excludes: list[str] = [],
+    backup_dir: str | None = None,
 ) -> Runner:
     """Backup a tenant using Ansible."""
+
+    extravars: dict[str, Any] = {
+        "tenant_tag": tenant_tag,
+        "service_type": service_type,
+        "skip_backup": False,
+        "delete_older_than_days": delete_older_than_days,
+        "additional_excludes": additional_excludes,
+    }
+    if backup_dir:
+        extravars["backup_dir_override"] = backup_dir
 
     return run_playbook(
         "backup_main.yml",
         tags="periodic" if periodic else "backup",
-        extravars={
-            "tenant_tag": tenant_tag,
-            "service_type": service_type,
-            "skip_backup": False,
-            "delete_older_than_days": delete_older_than_days,
-            "additional_excludes": additional_excludes,
-        },
+        extravars=extravars,
     )
 
 

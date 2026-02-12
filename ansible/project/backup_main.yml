@@ -7,6 +7,7 @@
 #   - tenant_admin_email: string (required when send_email is true)
 #   - tenant_hostname: string (required when send_email is true)
 #   - removal_reason: string (optional, included in removal email)
+#   - backup_dir_override: string (optional, overrides default backup dir)
 
 - name: Backup (and optionally remove) tenant
   hosts: localhost
@@ -19,12 +20,13 @@
             tenant_dir: "{{ paths.tenants.root }}/{{ tenant_tag }}"
             tenant_user: "tenant_{{ tenant_tag }}"
             tenant_db: "tenant_{{ tenant_tag }}"
-            backup_dir: "{{ paths.backup_attic_root }}/{{ tenant_tag }}"
+            backup_dir: "{{ backup_dir_override | default(paths.backup_attic_root + '/' + tenant_tag) }}"
         tags: [always]
 
       - name: Override backup dir for periodic backups
         ansible.builtin.set_fact:
             backup_dir: "{{ paths.backup_host_root }}/{{ tenant_tag }}/{{ lookup('pipe', 'date +%Y-%m-%d') }}"
+        when: backup_dir_override is not defined
         tags: [never, "periodic"]
 
       - name: Verify tenant exists
