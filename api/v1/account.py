@@ -3,6 +3,7 @@ from datetime import datetime
 
 import bcrypt
 import fastapi as fa
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,13 +23,9 @@ from utils import get_client_ip, send_mail, verify_turnstile
 V1_ACCOUNT = fa.APIRouter(prefix="/account", tags=["account"])
 
 
-class LoginRequest(BaseModel):
-    username: str
-    password: str
-
-
-class LoginResponse(BaseModel):
-    token: str
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
 
 
 class AccountResponse(BaseModel):
@@ -51,22 +48,24 @@ class ResetPasswordBody(BaseModel):
     password: str
 
 
-@V1_ACCOUNT.post("/login", response_model=LoginResponse)
+@V1_ACCOUNT.post("/login", response_model=TokenResponse)
 async def login(
-    request: LoginRequest,
+    form: t.Annotated[OAuth2PasswordRequestForm, fa.Depends()],
     db: t.Annotated[AsyncSession, fa.Depends(get_session)],
     client_ip: t.Annotated[str | None, fa.Depends(get_client_ip)],
 ):
-    site = await Site.get_by_tag_or_hostname(db, request.username)
+    site = await Site.get_by_tag_or_hostname(db, form.username)
 
-    if site is None or not verify_password(request.password, site.admin_password):
+    if site is None or not verify_password(form.password, site.admin_password):
         raise fa.HTTPException(status_code=401, detail="Invalid credentials")
 
     site.last_login_at = datetime.now()
     site.last_login_ip = client_ip
     await db.commit()
 
-    return LoginResponse(token=create_access_token(site.tag))
+    return TokenResponse(
+        access_token=create_access_token(site.tag), token_type="bearer"
+    )
 
 
 @V1_ACCOUNT.get("/", response_model=AccountResponse)
