@@ -14,22 +14,25 @@
   failed_when: false
   tags: [backup, periodic]
 
-- name: Find hardlinked files in tenant app dir
+- name: Find hardlinked files in tenant public dir
   ansible.builtin.shell:
-      cmd: find {{ tenant_dir }}/app -type f -links +1 -printf '%P\n'
+      cmd: find {{ tenant_dir }}/app/public -type f -links +1 -printf '%P\n'
   register: _hardlinked_files
   changed_when: false
   failed_when: false
   tags: [backup, periodic]
 
-- name: Exclude shared resources (mounts and hardlinks) from backup
+- name: Backup app/public, etc/config.json, logs; exclude shared resources
   ansible.builtin.set_fact:
       _backup_rsync_excludes: "{{
           (_tenant_mounts.stdout_lines | default([])
               | map('regex_replace', '^' + tenant_dir + '/', '--exclude=/') | list) +
           (_hardlinked_files.stdout_lines | default([])
-              | map('regex_replace', '^', '--exclude=/app/') | list) +
-          ['--exclude=/usr', '--exclude=/tmp', '--exclude=/session']
+              | map('regex_replace', '^', '--exclude=/app/public/') | list) +
+          ['--include=/app/', '--include=/app/public/', '--include=/app/public/**',
+           '--include=/etc/', '--include=/etc/config.json',
+           '--include=/logs/', '--include=/logs/**',
+           '--exclude=*']
       }}"
   tags: [backup, periodic]
 

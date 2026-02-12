@@ -4,7 +4,7 @@
 #   - skip_backup: boolean (default false)
 #   - delete_older_than_days: int (default 7, negative to disable)
 
-- name: Remove tenant
+- name: Backup (and optionally remove) tenant
   hosts: localhost
   connection: local
   gather_facts: false
