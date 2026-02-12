@@ -47,6 +47,7 @@ async def _main():
 
         for site in sites:
             try:
+                print(f"Backing up site: {site.tag}")
                 runner = do_backup(
                     site,
                     periodic=args.periodic,

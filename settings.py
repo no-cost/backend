@@ -21,6 +21,7 @@ VARS = {
             "root": environ["TENANTS_ROOT"],
             "skeleton_root": environ["SKELETON_ROOT"],
         },
+        "backup_system_root": environ["BACKUP_SYSTEM_ROOT"],
         "backup_host_root": environ["BACKUP_HOST_ROOT"],
         "backup_attic_root": environ["BACKUP_ATTIC_ROOT"],
     },

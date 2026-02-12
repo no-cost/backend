@@ -1,0 +1,52 @@
+---
+#   - delete_older_than_days: int (default 7, negative to disable)
+
+- name: Backup system dirs
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: true
+  tasks:
+      - name: Set backup path
+        ansible.builtin.set_fact:
+            backup_dir: "{{ paths.backup_system_root }}"
+            backup_file: "{{ paths.backup_system_root }}/{{ lookup('pipe', 'date +%Y-%m-%d') }}.tar.gz"
+        tags: [always]
+
+      - name: Create backup directory
+        ansible.builtin.file:
+            path: "{{ backup_dir }}"
+            state: directory
+            mode: "0700"
+        tags: [always]
+
+      - name: Archive system directories
+        community.general.archive:
+            path:
+                - /etc
+                - /root
+                - /srv/certbot
+            dest: "{{ backup_file }}"
+            format: gz
+        tags: [always]
+
+      - name: Find old backups
+        ansible.builtin.find:
+            paths: "{{ backup_dir }}"
+            patterns: "*.tar.gz"
+            age: "{{ delete_older_than_days | default(7) }}d"
+        register: _old_backups
+        when: (delete_older_than_days | default(7) | int) >= 0
+        tags: [always]
+
+      - name: Remove old backups
+        ansible.builtin.file:
+            path: "{{ old_backup.path }}"
+            state: absent
+        loop: "{{ _old_backups.files }}"
+        loop_control:
+            loop_var: old_backup
+        when:
+            - (delete_older_than_days | default(7) | int) >= 0
+            - _old_backups.files | length > 0
+        tags: [always]

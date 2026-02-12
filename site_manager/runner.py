@@ -132,3 +132,14 @@ def restore_tenant(
         tags=backup_mode,
         extravars=extravars,
     )
+
+
+def backup_system(
+    delete_older_than_days: int = 7,
+) -> Runner:
+    return run_playbook(
+        "backup_system_main.yml",
+        extravars={
+            "delete_older_than_days": delete_older_than_days,
+        },
+    )
