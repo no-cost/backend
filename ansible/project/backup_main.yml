@@ -60,7 +60,7 @@
         community.general.mail:
             host: "127.0.0.1"
             to: "{{ tenant_admin_email }}"
-            subject: "Your site has been removed"
+            subject: "Your site has been removed — no-cost.site"
             body: |
                 Your site at https://{{ tenant_hostname }} has been removed.
                 {% if removal_reason | default('') | length > 0 %}

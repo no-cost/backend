@@ -81,7 +81,7 @@
   community.general.mail:
       host: "127.0.0.1"
       to: "{{ tenant_admin_email }}"
-      subject: "Welcome to no-cost.site!"
+      subject: "Welcome! — no-cost.site"
       body: |
           Your WordPress site has been provisioned successfully!
 
