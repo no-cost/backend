@@ -49,11 +49,13 @@ def provision_tenant(
     admin_email: str,
     reset_token: str,
     force: bool = False,
+    send_email: bool = True,
 ) -> Runner:
     """Provision a new tenant using Ansible."""
 
     return run_playbook(
         "provision_main.yml",
+        tags="send-email" if send_email else None,
         extravars={
             "tenant_tag": tenant_tag,
             "tenant_hostname": hostname,

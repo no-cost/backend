@@ -14,6 +14,7 @@ def provision_site(
     site: Site,
     reset_token: str,
     force: bool = False,
+    send_email: bool = True,
 ):
     return provision_tenant(
         tenant_tag=site.tag,
@@ -22,6 +23,7 @@ def provision_site(
         admin_email=site.admin_email,
         reset_token=reset_token,
         force=force,
+        send_email=send_email,
     )
 
 

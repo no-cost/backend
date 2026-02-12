@@ -102,6 +102,8 @@ async def _provision_and_finalize(site_tag: str, reset_token: str):
     async with async_session_factory() as db:
         site = await db.get(Site, site_tag)
 
+        # so it doesn't block the event loop, so it can serve other reqs
+        # it still waits here before setting installed_at
         await asyncio.to_thread(provision_site, site, reset_token)
 
         site.installed_at = datetime.now()

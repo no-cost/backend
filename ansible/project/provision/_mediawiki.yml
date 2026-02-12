@@ -123,4 +123,4 @@
           If you have any questions, please let us know by replying to this e-mail.
       from: "noreply@{{ main_domain }}"
   failed_when: false
-  tags: [always]
+  tags: [never, "send-email"]
