@@ -11,11 +11,10 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.background import BackgroundTask
 
-from api.v1.auth import get_current_site
 from database.models import Site
 from database.session import get_session
 from site_manager import backup_site, remove_site
-from utils import get_client_ip
+from utils import get_client_ip, get_current_site
 
 V1_SETTINGS = fa.APIRouter(prefix="/settings", tags=["settings"])
 

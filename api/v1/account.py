@@ -7,18 +7,17 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.v1.auth import (
-    _password_fingerprint,
-    create_access_token,
-    create_reset_token,
-    decode_reset_token,
-    get_current_site,
-    verify_password,
-)
 from database.models import Site
 from database.session import get_session
 from settings import VARS
-from utils import get_client_ip, send_mail, verify_turnstile
+from utils import get_client_ip, get_current_site, send_mail, verify_turnstile
+from utils.auth import (
+    create_access_token,
+    create_reset_token,
+    decode_reset_token,
+    password_fingerprint,
+    verify_password,
+)
 
 V1_ACCOUNT = fa.APIRouter(prefix="/account", tags=["account"])
 
@@ -126,7 +125,7 @@ async def reset_password(
     if site is None:
         raise fa.HTTPException(status_code=404, detail="Site not found")
 
-    if pfp != _password_fingerprint(site.admin_password):
+    if pfp != password_fingerprint(site.admin_password):
         raise fa.HTTPException(
             status_code=400, detail="Reset link is invalid or has already been used"
         )

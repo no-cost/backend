@@ -59,7 +59,7 @@ def decode_access_token(token: str) -> str:
     return tag
 
 
-def _password_fingerprint(password_hash: str) -> str:
+def password_fingerprint(password_hash: str) -> str:
     """Short hash derived from the bcrypt password hash, used to bind reset tokens to the current password."""
     return hashlib.sha256(password_hash.encode()).hexdigest()[:16]
 
@@ -70,7 +70,7 @@ def create_reset_token(site_tag: str, password_db_hash: str) -> str:
         {
             "sub": site_tag,
             "purpose": "reset",
-            "pfp": _password_fingerprint(password_db_hash),
+            "pfp": password_fingerprint(password_db_hash),
             "exp": expires,
         },
         VARS["jwt_secret"],

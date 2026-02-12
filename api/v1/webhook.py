@@ -37,7 +37,7 @@ class KofiData(BaseModel):
     tier_name: str | None = None
 
 
-@V1_WEBHOOK.post("/kofi")
+@V1_WEBHOOK.post("/kofi", include_in_schema=False)
 async def kofi_webhook(
     data: t.Annotated[str, fa.Form()],
     db: t.Annotated[AsyncSession, fa.Depends(get_session)],

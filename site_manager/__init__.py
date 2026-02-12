@@ -11,6 +11,15 @@ from site_manager.runner import (
 from utils import run_cmd
 
 
+__all__ = [
+    "backup_site",
+    "provision_site",
+    "remove_site",
+    "restore_site",
+    "upgrade_site",
+]
+
+
 def provision_site(
     site: Site,
     reset_token: str,
