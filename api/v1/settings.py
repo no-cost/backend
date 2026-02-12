@@ -33,11 +33,13 @@ async def delete_site(
     """
 
     site.removed_at = datetime.now()
-    site.removal_reason = "User requested"
+    site.removal_reason = "Requested by you through settings"
 
     background_tasks.add_task(
         remove_site, site, skip_backup=True, reason=site.removal_reason
     )
     await db.commit()
 
-    return {"message": "Site removed successfully"}
+    return {
+        "message": "Your site is being removed. You will receive an email when the process is complete. If you haven't received anything, please contact us."
+    }
