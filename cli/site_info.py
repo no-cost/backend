@@ -44,7 +44,7 @@ async def _main():
         print(
             f"donor:          {f'yes ({site.donated_amount} EUR)' if site.is_donor() else 'no'}"
         )
-        print(f"has_perks:      {'yes' if site.has_perks() else 'no'}")
+        print(f"has_perks:      {'yes' if site.has_donor_perks() else 'no'}")
 
         if site.removed_at:
             print()

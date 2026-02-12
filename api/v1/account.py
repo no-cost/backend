@@ -1,15 +1,22 @@
+import asyncio
+import shutil
+import tempfile
 import typing as t
 from datetime import datetime
+from pathlib import Path
 
 import bcrypt
 import fastapi as fa
+from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.background import BackgroundTask
 
 from database.models import Site
 from database.session import get_session
 from settings import VARS
+from site_manager import backup_site, remove_site
 from utils import get_client_ip, get_current_site, send_mail, verify_turnstile
 from utils.auth import (
     create_access_token,
@@ -21,30 +28,16 @@ from utils.auth import (
 
 V1_ACCOUNT = fa.APIRouter(prefix="/account", tags=["account"])
 
+EXPORT_EXCLUDES: dict[str, list[str]] = {
+    "flarum": ["/etc", "/etc/config.json", "/logs", "/logs/**"],
+    "mediawiki": ["/etc", "/etc/config.json", "/logs", "/logs/**"],
+    "wordpress": ["/etc", "/etc/config.json", "/logs", "/logs/**"],
+}
+
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
-
-
-class AccountResponse(BaseModel):
-    tag: str
-    admin_email: EmailStr
-    site_type: str
-    hostname: str
-    donated_amount: float | None
-    installed_at: datetime | None
-    created_at: datetime
-
-
-class ResetPasswordRequestBody(BaseModel):
-    site: str
-    turnstile_token: str
-
-
-class ResetPasswordBody(BaseModel):
-    token: str
-    password: str
 
 
 @V1_ACCOUNT.post("/login", response_model=TokenResponse)
@@ -67,6 +60,16 @@ async def login(
     )
 
 
+class AccountResponse(BaseModel):
+    tag: str
+    admin_email: EmailStr
+    site_type: str
+    hostname: str
+    donated_amount: float | None
+    installed_at: datetime | None
+    created_at: datetime
+
+
 @V1_ACCOUNT.get("/", response_model=AccountResponse)
 async def account(
     site: t.Annotated[Site, fa.Depends(get_current_site)],
@@ -80,6 +83,11 @@ async def account(
         installed_at=site.installed_at,
         created_at=site.created_at,
     )
+
+
+class ResetPasswordRequestBody(BaseModel):
+    site: str
+    turnstile_token: str
 
 
 @V1_ACCOUNT.post("/reset-password/request")
@@ -113,6 +121,11 @@ async def request_password_reset(
     }
 
 
+class ResetPasswordBody(BaseModel):
+    token: str
+    password: str
+
+
 @V1_ACCOUNT.post("/reset-password")
 async def reset_password(
     body: ResetPasswordBody,
@@ -136,3 +149,58 @@ async def reset_password(
     await db.commit()
 
     return {"message": "Password has been set successfully."}
+
+
+@V1_ACCOUNT.get("/export")
+async def export_data(
+    site: t.Annotated[Site, fa.Depends(get_current_site)],
+) -> FileResponse:
+    """Export the authenticated user's site data as a downloadable archive."""
+
+    excludes = EXPORT_EXCLUDES.get(site.site_type, [])
+
+    tmp_dir = tempfile.mkdtemp(prefix="nocost_export_")
+    backup_dir = str(Path(tmp_dir) / site.tag)
+    archive_path = f"{backup_dir}.tar.gz"
+
+    try:
+        await asyncio.to_thread(
+            backup_site,
+            site,
+            additional_excludes=excludes,
+            backup_dir=backup_dir,
+            include_readme=True,
+        )
+    except Exception:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        raise fa.HTTPException(status_code=500, detail="Export failed")
+
+    return FileResponse(
+        path=archive_path,
+        media_type="application/gzip",
+        filename=f"{site.tag}-export.tar.gz",
+        background=BackgroundTask(shutil.rmtree, tmp_dir, ignore_errors=True),
+    )
+
+
+@V1_ACCOUNT.delete("/")
+async def delete_site(
+    site: t.Annotated[Site, fa.Depends(get_current_site)],
+    db: t.Annotated[AsyncSession, fa.Depends(get_session)],
+    background_tasks: fa.BackgroundTasks,
+    client_ip: t.Annotated[str | None, fa.Depends(get_client_ip)],
+) -> dict:
+    """Remove the authenticated user's site. Does not create a backup."""
+
+    site.removed_at = datetime.now()
+    site.removed_ip = client_ip
+    site.removal_reason = "Requested by you through settings"
+
+    background_tasks.add_task(
+        remove_site, site, skip_backup=True, reason=site.removal_reason
+    )
+    await db.commit()
+
+    return {
+        "message": "Your site is being removed. You will receive an email when the process is complete. If you haven't received anything, please contact us."
+    }

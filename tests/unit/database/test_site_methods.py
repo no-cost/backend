@@ -23,14 +23,14 @@ def test_site_donor():
         tag="test.com", hostname="test.com", admin_password="test", donated_amount=7
     )
     assert site.is_donor() is True
-    assert site.has_perks() is True
+    assert site.has_donor_perks() is True
 
     site.donated_amount = 6.99
-    assert site.has_perks() is False
+    assert site.has_donor_perks() is False
 
     site.donated_amount = 0
     assert site.is_donor() is False
-    assert site.has_perks() is False
+    assert site.has_donor_perks() is False
 
 
 def test_is_installed():
