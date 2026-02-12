@@ -5,6 +5,7 @@
 #   - tenant_user
 #   - tenant_db
 #   - backup_dir
+#   - additional_excludes
 
 - name: Find bind mounts for tenant
   ansible.builtin.shell:
@@ -22,13 +23,15 @@
   failed_when: false
   tags: ["backup", "periodic"]
 
-- name: Backup app/public, etc/config.json, logs; exclude shared resources
+- name: Backup app/public, etc/config.json, logs; exclude shared resources & additional files
   ansible.builtin.set_fact:
       _backup_rsync_excludes: "{{
           (_tenant_mounts.stdout_lines | default([])
               | map('regex_replace', '^' + tenant_dir + '/', '--exclude=/') | list) +
           (_hardlinked_files.stdout_lines | default([])
               | map('regex_replace', '^', '--exclude=/app/public/') | list) +
+          (additional_excludes | default([])
+              | map('regex_replace', '^', '--exclude=') | list) +
           ['--include=/app/', '--include=/app/public/', '--include=/app/public/**',
            '--include=/etc/', '--include=/etc/config.json',
            '--include=/logs/', '--include=/logs/**',

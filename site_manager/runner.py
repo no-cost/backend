@@ -97,6 +97,7 @@ def backup_tenant(
     service_type: str,
     periodic: bool = False,
     delete_older_than_days: int = 7,
+    additional_excludes: list[str] = [],
 ) -> Runner:
     """Backup a tenant using Ansible."""
 
@@ -108,6 +109,7 @@ def backup_tenant(
             "service_type": service_type,
             "skip_backup": False,
             "delete_older_than_days": delete_older_than_days,
+            "additional_excludes": additional_excludes,
         },
     )
 
