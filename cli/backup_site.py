@@ -18,6 +18,7 @@ async def _main():
         "--periodic",
         action="store_true",
         help="Use periodic (date-stamped) backup location instead of attic",
+        default=True
     )
     parser.add_argument(
         "--delete-older-than",
