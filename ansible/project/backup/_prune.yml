@@ -1,0 +1,23 @@
+---
+# Delete periodic backups older than N days
+# Params:
+#   - tenant_tag
+#   - delete_older_than_days (default 7)
+
+- name: Find old backups
+  ansible.builtin.find:
+      paths: "{{ paths.backup_host_root }}/{{ tenant_tag }}"
+      patterns: "*.tar.gz"
+      age: "{{ delete_older_than_days | default(7) }}d"
+  register: _old_backups
+  tags: [periodic]
+
+- name: Remove old backups
+  ansible.builtin.file:
+      path: "{{ old_backup.path }}"
+      state: absent
+  loop: "{{ _old_backups.files }}"
+  loop_control:
+      loop_var: old_backup
+  when: _old_backups.files | length > 0
+  tags: [periodic]

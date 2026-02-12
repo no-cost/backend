@@ -33,6 +33,7 @@ dev = [
 backupsite = "cli.backup_site:main"
 createsite = "cli.create_site:main"
 removesite = "cli.remove_site:main"
+restoresite = "cli.restore_site:main"
 makedonor = "cli.make_donor:main"
 siteinfo = "cli.site_info:main"
 upgradesite = "cli.upgrade:main"

@@ -1,0 +1,66 @@
+---
+# Restore tenant data from backup archive
+# Params:
+#   - backup_archive: path to .tar.gz
+#   - tenant_dir
+#   - tenant_user
+#   - tenant_db
+
+- name: Create temporary extraction directory
+  ansible.builtin.tempfile:
+      state: directory
+      prefix: "restore_{{ tenant_tag }}_"
+  register: _restore_tmpdir
+  tags: [attic, periodic]
+
+- name: Extract backup archive
+  ansible.builtin.unarchive:
+      src: "{{ backup_archive }}"
+      dest: "{{ _restore_tmpdir.path }}"
+      remote_src: true
+  tags: [attic, periodic]
+
+- name: Find extracted backup directory
+  ansible.builtin.find:
+      paths: "{{ _restore_tmpdir.path }}"
+      file_type: directory
+      recurse: false
+  register: _extracted_dirs
+  tags: [attic, periodic]
+
+- name: Set extracted backup path
+  ansible.builtin.set_fact:
+      _extracted_backup: "{{ _extracted_dirs.files[0].path }}"
+  tags: [attic, periodic]
+
+- name: Restore tenant files
+  ansible.posix.synchronize:
+      src: "{{ _extracted_backup }}/files/"
+      dest: "{{ tenant_dir }}/"
+      recursive: true
+      links: true
+  delegate_to: localhost
+  tags: [attic, periodic]
+
+- name: Fix ownership of restored files
+  ansible.builtin.shell:
+      cmd: |
+          find {{ tenant_dir }}/app -not -type l \
+          -exec chown {{ (tenant_user + ':' + tenant_user) | quote }} {} +
+      executable: /bin/bash
+  changed_when: true
+  tags: [attic, periodic]
+
+- name: Import tenant database
+  community.mysql.mysql_db:
+      name: "{{ tenant_db }}"
+      state: import
+      target: "{{ _extracted_backup }}/database.sql"
+      login_unix_socket: /var/run/mysqld/mysqld.sock
+  tags: [attic, periodic]
+
+- name: Remove temporary extraction directory
+  ansible.builtin.file:
+      path: "{{ _restore_tmpdir.path }}"
+      state: absent
+  tags: [attic, periodic]

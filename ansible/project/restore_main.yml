@@ -1,0 +1,56 @@
+---
+#   - tenant_tag
+#   - service_type: flarum|mediawiki|wordpress
+#   - backup_date (optional): required for "periodic" tag, e.g. restore from host backup dir (YYYY-MM-DD)
+#     by default, restore from attic
+
+- name: Restore tenant
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: true
+  tasks:
+      - name: Set tenant paths
+        ansible.builtin.set_fact:
+            tenant_dir: "{{ paths.tenants.root }}/{{ tenant_tag }}"
+            tenant_user: "tenant_{{ tenant_tag }}"
+            tenant_db: "tenant_{{ tenant_tag }}"
+        tags: [always]
+
+      - name: Set attic backup path
+        ansible.builtin.set_fact:
+            backup_archive: "{{ paths.backup_attic_root }}/{{ tenant_tag }}.tar.gz"
+        tags: [never, attic]
+
+      - name: Set periodic backup path
+        ansible.builtin.set_fact:
+            backup_archive: "{{ paths.backup_host_root }}/{{ tenant_tag }}/{{ backup_date }}.tar.gz"
+        tags: [never, periodic]
+
+      - name: Check if backup archive exists
+        ansible.builtin.stat:
+            path: "{{ backup_archive }}"
+        register: _backup_exists
+        tags: [attic, periodic]
+
+      - name: Fail if backup not found
+        ansible.builtin.fail:
+            msg: "Backup archive not found: {{ backup_archive }}"
+        when: not _backup_exists.stat.exists
+        tags: [attic, periodic]
+
+      - name: Verify tenant exists
+        ansible.builtin.stat:
+            path: "{{ tenant_dir }}"
+        register: _tenant_exists
+        tags: [always]
+
+      - name: Fail if tenant does not exist
+        ansible.builtin.fail:
+            msg: "Tenant directory does not exist: {{ tenant_dir }}. Provision the tenant first."
+        when: not _tenant_exists.stat.exists
+        tags: [attic, periodic]
+
+      - name: Restore tenant data
+        ansible.builtin.include_tasks: ./backup/_restore.yml
+        tags: [attic, periodic]

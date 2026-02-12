@@ -1,17 +1,44 @@
 ---
-# Backup tenant data before removal
+# Backup tenant-specific (non-shared) data
 # Params:
 #   - tenant_dir
 #   - tenant_user
 #   - tenant_db
 #   - backup_dir
 
+- name: Find bind mounts for tenant
+  ansible.builtin.shell:
+      cmd: mount | grep "{{ tenant_dir }}" | awk '{print $3}'
+  register: _tenant_mounts
+  changed_when: false
+  failed_when: false
+  tags: [backup, periodic]
+
+- name: Find hardlinked files in tenant app dir
+  ansible.builtin.shell:
+      cmd: find {{ tenant_dir }}/app -type f -links +1 -printf '%P\n'
+  register: _hardlinked_files
+  changed_when: false
+  failed_when: false
+  tags: [backup, periodic]
+
+- name: Exclude shared resources (mounts and hardlinks) from backup
+  ansible.builtin.set_fact:
+      _backup_rsync_excludes: "{{
+          (_tenant_mounts.stdout_lines | default([])
+              | map('regex_replace', '^' + tenant_dir + '/', '--exclude=/') | list) +
+          (_hardlinked_files.stdout_lines | default([])
+              | map('regex_replace', '^', '--exclude=/app/') | list) +
+          ['--exclude=/usr', '--exclude=/tmp', '--exclude=/session']
+      }}"
+  tags: [backup, periodic]
+
 - name: Create backup directory
   ansible.builtin.file:
       path: "{{ backup_dir }}"
       state: directory
       mode: "0700"
-  tags: [backup]
+  tags: [backup, periodic]
 
 - name: Backup tenant directory
   ansible.posix.synchronize:
@@ -19,8 +46,9 @@
       dest: "{{ backup_dir }}/files/"
       recursive: true
       links: true
+      rsync_opts: "{{ _backup_rsync_excludes }}"
   delegate_to: localhost
-  tags: [backup]
+  tags: [backup, periodic]
 
 - name: Dump tenant database
   community.mysql.mysql_db:
@@ -28,17 +56,17 @@
       state: dump
       target: "{{ backup_dir }}/database.sql"
       login_unix_socket: /var/run/mysqld/mysqld.sock
-  tags: [backup]
+  tags: [backup, periodic]
 
 - name: Compress backup
   community.general.archive:
       path: "{{ backup_dir }}"
       dest: "{{ backup_dir }}.tar.gz"
       format: gz
-  tags: [backup]
+  tags: [backup, periodic]
 
 - name: Remove uncompressed backup directory
   ansible.builtin.file:
       path: "{{ backup_dir }}"
       state: absent
-  tags: [backup]
+  tags: [backup, periodic]

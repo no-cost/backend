@@ -19,10 +19,6 @@ def run_playbook(
     quiet: bool = True,
     extravars: dict[str, Any] = {},
 ) -> Runner:
-    """
-    Run an Ansible playbook with the given extra variables.
-    """
-
     all_vars = VARS.copy()
     all_vars.update(extravars)
 
@@ -54,9 +50,7 @@ def provision_tenant(
     reset_token: str,
     force: bool = False,
 ) -> Runner:
-    """
-    Provision a new tenant using Ansible.
-    """
+    """Provision a new tenant using Ansible."""
 
     return run_playbook(
         "provision_main.yml",
@@ -76,9 +70,7 @@ def remove_tenant(
     service_type: str,
     skip_backup: bool = False,
 ) -> Runner:
-    """
-    Remove a tenant using Ansible.
-    """
+    """Remove a tenant using Ansible."""
 
     return run_playbook(
         "backup_main.yml",
@@ -93,17 +85,40 @@ def remove_tenant(
 def backup_tenant(
     tenant_tag: str,
     service_type: str,
+    periodic: bool = False,
+    delete_older_than_days: int = 7,
 ) -> Runner:
-    """
-    Backup a tenant using Ansible.
-    """
+    """Backup a tenant using Ansible."""
 
     return run_playbook(
         "backup_main.yml",
-        tags="backup",
+        tags="periodic" if periodic else "backup",
         extravars={
             "tenant_tag": tenant_tag,
             "service_type": service_type,
             "skip_backup": False,
+            "delete_older_than_days": delete_older_than_days,
         },
+    )
+
+
+def restore_tenant(
+    tenant_tag: str,
+    service_type: str,
+    backup_mode: str = "attic",
+    backup_date: str | None = None,
+) -> Runner:
+    """Restore a tenant from backup."""
+
+    extravars: dict[str, Any] = {
+        "tenant_tag": tenant_tag,
+        "service_type": service_type,
+    }
+    if backup_date:
+        extravars["backup_date"] = backup_date
+
+    return run_playbook(
+        "restore_main.yml",
+        tags=backup_mode,
+        extravars=extravars,
     )

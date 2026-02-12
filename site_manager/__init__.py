@@ -5,6 +5,7 @@ from site_manager.runner import (
     backup_tenant,
     provision_tenant,
     remove_tenant,
+    restore_tenant,
 )
 from utils import run_cmd
 
@@ -67,9 +68,25 @@ def remove_site(
 
 def backup_site(
     site: Site,
-    service_type: str,
+    periodic: bool = False,
+    delete_older_than_days: int = 7,
 ):
     return backup_tenant(
         tenant_tag=site.tag,
-        service_type=service_type,
+        service_type=site.site_type,
+        periodic=periodic,
+        delete_older_than_days=delete_older_than_days,
+    )
+
+
+def restore_site(
+    site: Site,
+    backup_mode: str = "attic",
+    backup_date: str | None = None,
+):
+    return restore_tenant(
+        tenant_tag=site.tag,
+        service_type=site.site_type,
+        backup_mode=backup_mode,
+        backup_date=backup_date,
     )
