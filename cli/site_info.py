@@ -15,11 +15,13 @@ async def _main():
 
     try:
         async with async_session_factory() as db:
-            site = await Site.get_by_identifier(db, args.identifier)
+            site = await Site.get_by_identifier(
+                db, args.identifier, match_removed=True
+            )
 
             if site is None:
                 print(
-                    f"Error: active site '{args.identifier}' not found", file=sys.stderr
+                    f"Error: site '{args.identifier}' not found", file=sys.stderr
                 )
                 sys.exit(1)
 

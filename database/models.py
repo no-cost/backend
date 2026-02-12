@@ -83,12 +83,16 @@ class Site(Base):
 
     # clsmethods
     @classmethod
-    async def get_all_active(cls, db: AsyncSession, *additional_filters):
-        """Get all active sites as an async iterator."""
+    async def get_all_active(
+        cls, db: AsyncSession, *additional_filters, match_removed: bool = False
+    ):
+        """Get all sites as an async iterator."""
 
-        result = await db.stream(
-            select(cls).where(cls.removed_at.is_(None), *additional_filters)
-        )
+        filters = [*additional_filters]
+        if not match_removed:
+            filters.insert(0, cls.removed_at.is_(None))
+
+        result = await db.stream(select(cls).where(*filters))
         async for row in result.scalars():
             yield row
 
@@ -104,37 +108,42 @@ class Site(Base):
         return result.scalar_one_or_none()
 
     @classmethod
-    async def get_by_tag_or_hostname(cls, db: AsyncSession, value: str) -> Site | None:
-        """Get a single active site by tag or hostname."""
+    async def get_by_tag_or_hostname(
+        cls, db: AsyncSession, value: str, *, match_removed: bool = False
+    ) -> Site | None:
+        """Get a single site by tag or hostname (used during login, as same e-mail can have multiple sites)."""
 
-        result = await db.execute(
-            select(cls).where(
-                cls.removed_at.is_(None),
-                or_(cls.tag == value, cls.hostname == value),
-            )
-        )
+        filters = [or_(cls.tag == value, cls.hostname == value)]
+        if not match_removed:
+            filters.insert(0, cls.removed_at.is_(None))
+
+        result = await db.execute(select(cls).where(*filters))
         return result.scalar_one_or_none()
 
     @classmethod
-    async def get_by_identifier(cls, db: AsyncSession, identifier: str) -> Site | None:
-        """Get a single active site matching by tag, email, or hostname."""
+    async def get_by_identifier(
+        cls, db: AsyncSession, identifier: str, *, match_removed: bool = False
+    ) -> Site | None:
+        """Get a single site matching by tag, email, or hostname."""
 
-        result = await db.execute(
-            select(cls).where(
-                cls.removed_at.is_(None), cls._identifier_filter(identifier)
-            )
-        )
+        filters = [cls._identifier_filter(identifier)]
+        if not match_removed:
+            filters.insert(0, cls.removed_at.is_(None))
+
+        result = await db.execute(select(cls).where(*filters))
         return result.scalar_one_or_none()
 
     @classmethod
-    async def get_all_by_identifier(cls, db: AsyncSession, identifier: str):
-        """Get all active sites matching by tag, email, or hostname as an async iterator."""
+    async def get_all_by_identifier(
+        cls, db: AsyncSession, identifier: str, *, match_removed: bool = False
+    ):
+        """Get all sites matching by tag, email, or hostname as an async iterator."""
 
-        result = await db.stream(
-            select(cls).where(
-                cls.removed_at.is_(None), cls._identifier_filter(identifier)
-            )
-        )
+        filters = [cls._identifier_filter(identifier)]
+        if not match_removed:
+            filters.insert(0, cls.removed_at.is_(None))
+
+        result = await db.stream(select(cls).where(*filters))
         async for row in result.scalars():
             yield row
 
