@@ -9,6 +9,7 @@ from api.v1.auth import get_current_site
 from database.models import Site
 from database.session import get_session
 from site_manager import remove_site
+from utils import get_client_ip
 
 V1_SETTINGS = fa.APIRouter(prefix="/settings", tags=["settings"])
 
@@ -27,12 +28,14 @@ async def delete_site(
     site: t.Annotated[Site, fa.Depends(get_current_site)],
     db: t.Annotated[AsyncSession, fa.Depends(get_session)],
     background_tasks: fa.BackgroundTasks,
+    client_ip: t.Annotated[str | None, fa.Depends(get_client_ip)],
 ) -> dict:
     """
     Remove the authenticated user's site. Does not create a backup.
     """
 
     site.removed_at = datetime.now()
+    site.removed_ip = client_ip
     site.removal_reason = "Requested by you through settings"
 
     background_tasks.add_task(
