@@ -30,13 +30,14 @@ dev = [
 ]
 
 [project.scripts]
-backupsite = "cli.backup_site:main"
-createsite = "cli.create_site:main"
-removesite = "cli.remove_site:main"
-restoresite = "cli.restore_site:main"
-makedonor = "cli.make_donor:main"
-siteinfo = "cli.site_info:main"
-upgradesite = "cli.upgrade:main"
+backup_site = "cli.backup_site:main"
+create_site = "cli.create_site:main"
+remove_site = "cli.remove_site:main"
+restore_site = "cli.restore_site:main"
+make_donor = "cli.make_donor:main"
+site_info = "cli.site_info:main"
+sync_nginx_maps = "cli.sync_nginx_maps:main"
+upgrade_site = "cli.upgrade:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
