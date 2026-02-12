@@ -21,9 +21,9 @@ V1_SETTINGS = fa.APIRouter(prefix="/settings", tags=["settings"])
 
 # sensitive files to strip from data exports, per service type
 EXPORT_EXCLUDES: dict[str, list[str]] = {
-    "flarum": ["/etc/config.json", "/logs/**"],
-    "mediawiki": ["/etc/config.json", "/logs/**"],
-    "wordpress": ["/etc/config.json", "/logs/**"],
+    "flarum": ["/etc", "/etc/config.json", "/logs", "/logs/**"],
+    "mediawiki": ["/etc", "/etc/config.json", "/logs", "/logs/**"],
+    "wordpress": ["/etc", "/etc/config.json", "/logs", "/logs/**"],
 }
 
 
