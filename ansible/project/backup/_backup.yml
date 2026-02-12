@@ -6,6 +6,7 @@
 #   - tenant_db
 #   - backup_dir
 #   - additional_excludes
+#   - include_readme (default false)
 
 - name: Find bind mounts for tenant
   ansible.builtin.shell:
@@ -62,6 +63,14 @@
       state: dump
       target: "{{ backup_dir }}/database.sql"
       login_unix_socket: /var/run/mysqld/mysqld.sock
+  tags: ["backup", "periodic"]
+
+- name: Render export README into backup
+  ansible.builtin.template:
+      src: "{{ playbook_dir }}/files/README_EXPORT.md"
+      dest: "{{ backup_dir }}/README.md"
+      mode: "0644"
+  when: include_readme | default(false) | bool
   tags: ["backup", "periodic"]
 
 - name: Compress backup

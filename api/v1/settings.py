@@ -77,6 +77,7 @@ async def export_data(
             site,
             additional_excludes=excludes,
             backup_dir=backup_dir,
+            include_readme=True,
         )
     except Exception:
         shutil.rmtree(tmp_dir, ignore_errors=True)

@@ -81,6 +81,7 @@ def backup_site(
     delete_older_than_days: int = 7,
     additional_excludes: list[str] = [],
     backup_dir: str | None = None,
+    include_readme: bool = False,
 ):
     return backup_tenant(
         tenant_tag=site.tag,
@@ -89,6 +90,7 @@ def backup_site(
         delete_older_than_days=delete_older_than_days,
         additional_excludes=additional_excludes,
         backup_dir=backup_dir,
+        include_readme=include_readme,
     )
 
 

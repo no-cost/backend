@@ -99,6 +99,7 @@ def backup_tenant(
     delete_older_than_days: int = 7,
     additional_excludes: list[str] = [],
     backup_dir: str | None = None,
+    include_readme: bool = False,
 ) -> Runner:
     """Backup a tenant using Ansible."""
 
@@ -108,6 +109,7 @@ def backup_tenant(
         "skip_backup": False,
         "delete_older_than_days": delete_older_than_days,
         "additional_excludes": additional_excludes,
+        "include_readme": include_readme,
     }
     if backup_dir:
         extravars["backup_dir_override"] = backup_dir
