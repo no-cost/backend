@@ -15,14 +15,10 @@ async def _main():
 
     try:
         async with async_session_factory() as db:
-            site = await Site.get_by_identifier(
-                db, args.identifier, match_removed=True
-            )
+            site = await Site.get_by_identifier(db, args.identifier, match_removed=True)
 
             if site is None:
-                print(
-                    f"Error: site '{args.identifier}' not found", file=sys.stderr
-                )
+                print(f"Error: site '{args.identifier}' not found", file=sys.stderr)
                 sys.exit(1)
 
         cc = get_country_code(site.created_ip) if site.created_ip else None

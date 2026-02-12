@@ -76,7 +76,9 @@ async def _main():
                 sys.exit(1)
 
             reset_token = create_reset_token(site.tag, site.admin_password)
-            runner = provision_site(site, reset_token, force=args.force, send_email=args.send_email)
+            runner = provision_site(
+                site, reset_token, force=args.force, send_email=args.send_email
+            )
             print(runner.stdout.read())
             print(runner.stderr.read())
 
