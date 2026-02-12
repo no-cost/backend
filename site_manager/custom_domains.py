@@ -108,24 +108,24 @@ map $host $site_id {{
     hostnames;
 
     # internal hosts
-{'\n'.join(internal_entries) if internal_entries else "    # (none)"}
+{"\n".join(internal_entries) if internal_entries else "    # (none)"}
 
     # user domains/CNAMEs
-{'\n'.join(custom_entries) if custom_entries else "    # (none)"}
+{"\n".join(custom_entries) if custom_entries else "    # (none)"}
 
     default "";
 }}
 
 # site_id -> canonical hostname
 map $site_id $canonical_host {{
-{'\n'.join(canonical_entries) if canonical_entries else "    # (none)"}
+{"\n".join(canonical_entries) if canonical_entries else "    # (none)"}
 
     default "";
 }}
 
 # site_id -> service type
 map $site_id $service_type {{
-{'\n'.join(type_entries) if type_entries else "    # (none)"}
+{"\n".join(type_entries) if type_entries else "    # (none)"}
 
     default "";
 }}

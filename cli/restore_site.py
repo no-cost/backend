@@ -33,7 +33,9 @@ async def _main():
             site = await Site.get_by_identifier(db, args.identifier)
 
             if site is None:
-                print(f"Error: active site '{args.identifier}' not found", file=sys.stderr)
+                print(
+                    f"Error: active site '{args.identifier}' not found", file=sys.stderr
+                )
                 sys.exit(1)
 
         runner = do_restore(

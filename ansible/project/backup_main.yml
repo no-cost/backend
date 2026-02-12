@@ -21,7 +21,7 @@
       - name: Override backup dir for periodic backups
         ansible.builtin.set_fact:
             backup_dir: "{{ paths.backup_host_root }}/{{ tenant_tag }}/{{ lookup('pipe', 'date +%Y-%m-%d') }}"
-        tags: [never, periodic]
+        tags: [never, "periodic"]
 
       - name: Verify tenant exists
         ansible.builtin.stat:
@@ -39,15 +39,15 @@
       - name: Backup tenant data
         ansible.builtin.include_tasks: ./backup/_backup.yml
         when: not (skip_backup | default(false) | bool)
-        tags: [backup, periodic]
+        tags: ["backup", "periodic"]
 
       # prune old
       - name: Delete old periodic backups
         ansible.builtin.include_tasks: ./backup/_prune.yml
         when: (delete_older_than_days | default(7) | int) >= 0
-        tags: [never, periodic]
+        tags: [never, "periodic"]
 
       # hard delete
       - name: Cleanup tenant resources
         ansible.builtin.include_tasks: ./backup/_cleanup.yml
-        tags: [cleanup]
+        tags: ["cleanup"]

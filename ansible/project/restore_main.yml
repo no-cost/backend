@@ -20,24 +20,24 @@
       - name: Set attic backup path
         ansible.builtin.set_fact:
             backup_archive: "{{ paths.backup_attic_root }}/{{ tenant_tag }}.tar.gz"
-        tags: [never, attic]
+        tags: [never, "attic"]
 
       - name: Set periodic backup path
         ansible.builtin.set_fact:
             backup_archive: "{{ paths.backup_host_root }}/{{ tenant_tag }}/{{ backup_date }}.tar.gz"
-        tags: [never, periodic]
+        tags: [never, "periodic"]
 
       - name: Check if backup archive exists
         ansible.builtin.stat:
             path: "{{ backup_archive }}"
         register: _backup_exists
-        tags: [attic, periodic]
+        tags: [attic, "periodic"]
 
       - name: Fail if backup not found
         ansible.builtin.fail:
             msg: "Backup archive not found: {{ backup_archive }}"
         when: not _backup_exists.stat.exists
-        tags: [attic, periodic]
+        tags: [attic, "periodic"]
 
       - name: Verify tenant exists
         ansible.builtin.stat:
@@ -49,8 +49,8 @@
         ansible.builtin.fail:
             msg: "Tenant directory does not exist: {{ tenant_dir }}. Provision the tenant first."
         when: not _tenant_exists.stat.exists
-        tags: [attic, periodic]
+        tags: [attic, "periodic"]
 
       - name: Restore tenant data
         ansible.builtin.include_tasks: ./backup/_restore.yml
-        tags: [attic, periodic]
+        tags: [attic, "periodic"]

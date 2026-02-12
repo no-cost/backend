@@ -12,7 +12,7 @@
   register: _tenant_mounts
   changed_when: false
   failed_when: false
-  tags: [backup, periodic]
+  tags: ["backup", "periodic"]
 
 - name: Find hardlinked files in tenant public dir
   ansible.builtin.shell:
@@ -20,7 +20,7 @@
   register: _hardlinked_files
   changed_when: false
   failed_when: false
-  tags: [backup, periodic]
+  tags: ["backup", "periodic"]
 
 - name: Backup app/public, etc/config.json, logs; exclude shared resources
   ansible.builtin.set_fact:
@@ -34,14 +34,14 @@
            '--include=/logs/', '--include=/logs/**',
            '--exclude=*']
       }}"
-  tags: [backup, periodic]
+  tags: ["backup", "periodic"]
 
 - name: Create backup directory
   ansible.builtin.file:
       path: "{{ backup_dir }}"
       state: directory
       mode: "0700"
-  tags: [backup, periodic]
+  tags: ["backup", "periodic"]
 
 - name: Backup tenant directory
   ansible.posix.synchronize:
@@ -51,7 +51,7 @@
       links: true
       rsync_opts: "{{ _backup_rsync_excludes }}"
   delegate_to: localhost
-  tags: [backup, periodic]
+  tags: ["backup", "periodic"]
 
 - name: Dump tenant database
   community.mysql.mysql_db:
@@ -59,17 +59,17 @@
       state: dump
       target: "{{ backup_dir }}/database.sql"
       login_unix_socket: /var/run/mysqld/mysqld.sock
-  tags: [backup, periodic]
+  tags: ["backup", "periodic"]
 
 - name: Compress backup
   community.general.archive:
       path: "{{ backup_dir }}"
       dest: "{{ backup_dir }}.tar.gz"
       format: gz
-  tags: [backup, periodic]
+  tags: ["backup", "periodic"]
 
 - name: Remove uncompressed backup directory
   ansible.builtin.file:
       path: "{{ backup_dir }}"
       state: absent
-  tags: [backup, periodic]
+  tags: ["backup", "periodic"]

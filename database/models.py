@@ -29,7 +29,8 @@ class Site(Base):
     # account
     admin_email: Mapped[str] = mapped_column(String(length=255), nullable=False)
     admin_password: Mapped[str] = mapped_column(
-        String(length=72), nullable=False  # bcrypt
+        String(length=72),
+        nullable=False,  # bcrypt
     )
 
     # config
@@ -48,7 +49,7 @@ class Site(Base):
     last_login_at: Mapped[datetime] = mapped_column(nullable=True)
 
     # misc
-    donated_amount: Mapped[float] = mapped_column(default=0.0, server_default='0')
+    donated_amount: Mapped[float] = mapped_column(default=0.0, server_default="0")
     """Donations are per site/account, in EUR"""
 
     # timestamps
@@ -103,9 +104,7 @@ class Site(Base):
         return result.scalar_one_or_none()
 
     @classmethod
-    async def get_by_tag_or_hostname(
-        cls, db: AsyncSession, value: str
-    ) -> Site | None:
+    async def get_by_tag_or_hostname(cls, db: AsyncSession, value: str) -> Site | None:
         """Get a single active site by tag or hostname."""
 
         result = await db.execute(

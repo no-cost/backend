@@ -10,7 +10,7 @@
       patterns: "*.tar.gz"
       age: "{{ delete_older_than_days | default(7) }}d"
   register: _old_backups
-  tags: [periodic]
+  tags: ["periodic"]
 
 - name: Remove old backups
   ansible.builtin.file:
@@ -20,4 +20,4 @@
   loop_control:
       loop_var: old_backup
   when: _old_backups.files | length > 0
-  tags: [periodic]
+  tags: ["periodic"]

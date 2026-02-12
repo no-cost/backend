@@ -10,7 +10,8 @@ async def _main():
     parser = argparse.ArgumentParser(description="Upgrade tenant sites")
     parser.add_argument("--tag", help="Tenant to upgrade")
     parser.add_argument(
-        "--service", "-s",
+        "--service",
+        "-s",
         help="Upgrade all tenants of this service type",
         choices=["flarum", "mediawiki", "wordpress"],
         default=None,

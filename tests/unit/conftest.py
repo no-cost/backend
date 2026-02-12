@@ -3,6 +3,7 @@ Fixtures for unit tests, stuff like setting up the DB, cleanup, etc...
 """
 
 import os
+
 os.environ.setdefault("ALLOWED_DOMAINS", "test.local,test2.local")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///test_database.sqlite")
 os.environ.setdefault("ENVIRONMENT", "test")

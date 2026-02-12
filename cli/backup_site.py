@@ -33,7 +33,10 @@ async def _main():
             if args.identifier:
                 site = await Site.get_by_identifier(db, args.identifier)
                 if site is None:
-                    print(f"Error: active site '{args.identifier}' not found", file=sys.stderr)
+                    print(
+                        f"Error: active site '{args.identifier}' not found",
+                        file=sys.stderr,
+                    )
                     sys.exit(1)
                 sites = [site]
             else:
