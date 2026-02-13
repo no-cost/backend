@@ -165,7 +165,7 @@ async def _rewrite_urls(site: Site, old_hostname: str) -> None:
             cwd=tenant_root / "public",
         )
 
-    upgrade_site(site)
+    await upgrade_site(site)
 
 
 def _write_configs_and_reload(sites_config: str, server_names_config: str) -> None:
