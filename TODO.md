@@ -1,13 +1,12 @@
 # todo
 
+- [ ] add sync files functionality to upgrade_site cmd (to link missing/unlink removed hardlinks, etc.), just in case the apps change their file structure
+- [ ] monitoring via API + BetterStack
+- [ ] set mediawiki default language
+- [ ] allow hiding mediawiki footer
+- [ ] allow users to change parent domain without donating
+- [ ] add no-cost.site footer to all apps
 - [ ] handle edge case: site is deleted and later recreated with the same tag - overwrite? rotate (append .1, .2)?
-- [ ] settings
-  - [x] per service type settings (e.g. Mediawiki: set default skin, upload favicon) - investigate (by default, it requires writing to config, is there maybe a module to write this info to DB and inject it to let admins change default config via MW UI?)
-  - [x] custom domain linking
-    - [x] link_domain command
-  - [x] fixup (migrate site, cache flush, sync files)
-    - [ ] add sync files functionality to upgrade_site cmd (to link missing/unlink removed hardlinks, etc.), just in case the apps change their file structure
-  - [x] data export
-  - [x] account deletion
-- [x] backups!!!!!
-- [ ] monitoring!!
+- [ ] split tenant access logs by site_id
+- [ ] logrotate on api logs (and friends)
+- [ ] add backend tests (unit + integration), run after deploy to ensure we can provision sample instances and remove them etc.
