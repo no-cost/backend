@@ -2,8 +2,6 @@ import os
 import shutil
 
 import fastapi as fa
-from pydantic import BaseModel
-
 from api.v1.account import V1_ACCOUNT
 from api.v1.settings import V1_SETTINGS
 from api.v1.signup import V1_SIGNUP
@@ -18,13 +16,9 @@ async def index():
     return {"status": "ok", "version": "1.0.0"}
 
 
-class HealthCheckRequest(BaseModel):
-    token: str
-
-
-@V1.post("/health-check")
-async def health_check(body: HealthCheckRequest):
-    if body.token != VARS["health_check_token"]:
+@V1.get("/health-check")
+async def health_check(x_token: str = fa.Header()):
+    if x_token != VARS["health_check_token"]:
         raise fa.HTTPException(status_code=403, detail="Invalid token")
 
     load_1m, load_5m, load_15m = os.getloadavg()
