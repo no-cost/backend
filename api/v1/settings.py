@@ -14,7 +14,7 @@ from site_manager.custom_domains import (
     link_custom_domain,
     unlink_custom_domain,
 )
-from utils import get_current_site
+from utils.auth import get_current_site
 
 V1_SETTINGS = fa.APIRouter(prefix="/settings", tags=["settings"])
 

@@ -14,8 +14,10 @@ from database.session import async_session_factory, get_session
 from settings import VARS
 from site_manager import provision_site
 from site_manager.custom_domains import write_nginx_maps
-from utils import get_client_ip, random_string, validate_tag, verify_turnstile
+from utils import random_string, validate_tag
 from utils.auth import create_reset_token
+from utils.ip import get_client_ip
+from utils.turnstile import verify_turnstile
 
 V1_SIGNUP = fa.APIRouter(prefix="/signup", tags=["signup"])
 

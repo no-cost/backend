@@ -8,16 +8,7 @@ from site_manager.runner import (
     remove_tenant,
     restore_tenant,
 )
-from utils import as_tenant
-
-
-__all__ = [
-    "backup_site",
-    "provision_site",
-    "remove_site",
-    "restore_site",
-    "upgrade_site",
-]
+from utils.cmd import run_cmd_as_tenant
 
 
 def provision_site(
@@ -47,17 +38,19 @@ async def upgrade_site(
     match site.site_type:
         case "flarum":
             app_dir = tenant_root / "app"
-            await as_tenant(tenant_user, "php flarum migrate", cwd=app_dir)
-            await as_tenant(tenant_user, "php flarum cache:clear", cwd=app_dir)
+            await run_cmd_as_tenant(tenant_user, "php flarum migrate", cwd=app_dir)
+            await run_cmd_as_tenant(tenant_user, "php flarum cache:clear", cwd=app_dir)
         case "mediawiki":
-            await as_tenant(
+            await run_cmd_as_tenant(
                 tenant_user,
                 "php maintenance/run.php update --quick",
                 cwd=tenant_pub_dir,
             )
         case "wordpress":
-            await as_tenant(tenant_user, "wp cache flush", cwd=tenant_pub_dir)
-            await as_tenant(tenant_user, "wp core update-db", cwd=tenant_pub_dir)
+            await run_cmd_as_tenant(tenant_user, "wp cache flush", cwd=tenant_pub_dir)
+            await run_cmd_as_tenant(
+                tenant_user, "wp core update-db", cwd=tenant_pub_dir
+            )
 
 
 def remove_site(

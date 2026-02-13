@@ -17,14 +17,17 @@ from database.models import Site
 from database.session import get_session
 from settings import VARS
 from site_manager import backup_site, remove_site
-from utils import get_client_ip, get_current_site, send_mail, verify_turnstile
 from utils.auth import (
     create_access_token,
     create_reset_token,
     decode_reset_token,
+    get_current_site,
     password_fingerprint,
     verify_password,
 )
+from utils.ip import get_client_ip
+from utils.mail import send_mail
+from utils.turnstile import verify_turnstile
 
 V1_ACCOUNT = fa.APIRouter(prefix="/account", tags=["account"])
 

@@ -6,7 +6,7 @@ from sqlalchemy import or_
 
 from database.models import Site
 from database.session import async_session_factory, engine
-from utils import get_attic_backup_path, get_latest_host_backup
+from utils.backup import get_attic_backup_path, get_latest_host_backup
 from utils.ip import get_country_code
 
 

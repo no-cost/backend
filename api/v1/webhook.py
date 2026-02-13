@@ -11,7 +11,7 @@ from database.models import Site
 from database.session import get_session
 from settings import VARS
 from site_manager.tenant_config import update_config
-from utils import send_mail
+from utils.mail import send_mail
 
 logger = logging.getLogger(__name__)
 
