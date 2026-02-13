@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Site
 from settings import VARS
+from utils import as_tenant
 
 NGINX_MAP_PATH = Path("/etc/nginx/maps/sites.conf")
 CUSTOM_SERVER_NAMES_PATH = Path("/etc/nginx/maps/custom-server-names.conf")
@@ -57,9 +58,11 @@ async def link_custom_domain(db: AsyncSession, site: Site, custom_domain: str) -
             f"CNAME record for '{custom_domain}' must point to '{CNAME_TARGET}'"
         )
 
+    old_hostname = site.hostname
     site.hostname = custom_domain
     await db.commit()
     await write_nginx_maps(db)
+    await _rewrite_urls(site, old_hostname)
 
 
 async def unlink_custom_domain(
@@ -69,9 +72,11 @@ async def unlink_custom_domain(
     Unlink a custom domain from a site and restore canonical hostname.
     """
 
+    old_hostname = site.hostname
     site.hostname = restore_canonical
     await db.commit()
     await write_nginx_maps(db)
+    await _rewrite_urls(site, old_hostname)
 
 
 async def write_nginx_maps(db: AsyncSession) -> None:
@@ -142,6 +147,20 @@ map $site_id $service_type {{
 
     await asyncio.to_thread(
         _write_configs_and_reload, sites_config, server_names_config
+    )
+
+
+async def _rewrite_urls(site: Site, old_hostname: str) -> None:
+    if site.site_type != "wordpress":
+        # not needed for others
+        return
+
+    tenant_pub_dir = Path(VARS["paths"]["tenants"]["root"]) / site.tag / "public"
+    tenant_user = f"tenant_{site.tag}"
+    await as_tenant(
+        tenant_user,
+        f"wp search-replace 'https://{old_hostname}' 'https://{site.hostname}' --all-tables --precise",
+        cwd=tenant_pub_dir,
     )
 
 
