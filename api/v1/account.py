@@ -10,6 +10,7 @@ import fastapi as fa
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.background import BackgroundTask
 
@@ -19,8 +20,10 @@ from settings import VARS
 from site_manager import backup_site, remove_site
 from utils.auth import (
     create_access_token,
+    create_download_token,
     create_email_change_token,
     create_reset_token,
+    decode_download_token,
     decode_email_change_token,
     decode_reset_token,
     get_current_site,
@@ -236,11 +239,39 @@ async def confirm_email_change(
     return {"message": "E-mail address has been updated."}
 
 
+@V1_ACCOUNT.post("/export/token")
+async def export_token(
+    site: t.Annotated[Site, fa.Depends(get_current_site)],
+) -> dict:
+    return {"token": create_download_token(site.tag)}
+
+
+async def _resolve_export_site(
+    db: AsyncSession,
+    token: str | None,
+    request: fa.Request,
+) -> Site:
+    if token:
+        tag = decode_download_token(token)
+        result = await db.execute(
+            select(Site).where(Site.tag == tag, Site.removed_at.is_(None))
+        )
+        site = result.scalar_one_or_none()
+        if site:
+            return site
+
+    raise fa.HTTPException(status_code=401, detail="Not authenticated")
+
+
 @V1_ACCOUNT.get("/export")
 async def export_data(
-    site: t.Annotated[Site, fa.Depends(get_current_site)],
+    request: fa.Request,
+    db: t.Annotated[AsyncSession, fa.Depends(get_session)],
+    token: str | None = None,
 ) -> FileResponse:
     """Export the authenticated user's site data as a downloadable archive."""
+
+    site = await _resolve_export_site(db, token, request)
 
     excludes = EXPORT_EXCLUDES.get(site.site_type, [])
 

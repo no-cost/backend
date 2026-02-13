@@ -74,7 +74,7 @@ def create_reset_token(site_tag: str, password_db_hash: str) -> str:
 
 
 def decode_reset_token(token: str) -> tuple[str, str]:
-    """Returns (site_tag, password_fingerprint)."""
+    """Returns (site_tag, password_fingerprint)"""
 
     try:
         payload = jwt.decode(token, VARS["jwt_secret"], algorithms=["HS256"])
@@ -109,7 +109,7 @@ def create_email_change_token(site_tag: str, new_email: str) -> str:
 
 
 def decode_email_change_token(token: str) -> tuple[str, str]:
-    """Returns (site_tag, new_email)."""
+    """Returns (site_tag, new_email)"""
 
     try:
         payload = jwt.decode(token, VARS["jwt_secret"], algorithms=["HS256"])
@@ -127,6 +127,35 @@ def decode_email_change_token(token: str) -> tuple[str, str]:
         raise fa.HTTPException(status_code=400, detail="Invalid confirmation link")
 
     return tag, new_email
+
+
+def create_download_token(site_tag: str) -> str:
+    expires = datetime.now(timezone.utc) + timedelta(minutes=1)
+    return jwt.encode(
+        {"sub": site_tag, "purpose": "download", "exp": expires},
+        VARS["jwt_secret"],
+        algorithm="HS256",
+    )
+
+
+def decode_download_token(token: str) -> str:
+    """Returns site_tag"""
+
+    try:
+        payload = jwt.decode(token, VARS["jwt_secret"], algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        raise fa.HTTPException(status_code=400, detail="Download link has expired")
+    except jwt.InvalidTokenError:
+        raise fa.HTTPException(status_code=400, detail="Invalid download link")
+
+    if payload.get("purpose") != "download":
+        raise fa.HTTPException(status_code=400, detail="Invalid download link")
+
+    tag = payload.get("sub")
+    if tag is None:
+        raise fa.HTTPException(status_code=400, detail="Invalid download link")
+
+    return tag
 
 
 def verify_password(plain: str, hashed: str) -> bool:
