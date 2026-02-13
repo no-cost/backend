@@ -4,12 +4,13 @@ from pathlib import Path
 
 from settings import VARS
 from utils.auth import get_current_site
-from utils.cmd import run_cmd
+from utils.cmd import as_tenant, run_cmd
 from utils.ip import get_client_ip
 from utils.mail import send_mail
 from utils.turnstile import verify_turnstile
 
 __all__ = [
+    "as_tenant",
     "get_attic_backup_path",
     "get_current_site",
     "get_client_ip",

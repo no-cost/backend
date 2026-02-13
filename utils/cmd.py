@@ -1,6 +1,10 @@
 import asyncio
 
 
+async def as_tenant(tenant_user: str, command: str, **kwargs) -> None:
+    await run_cmd(f"sudo -u {tenant_user} {command}", **kwargs)
+
+
 async def run_cmd(
     command: str, check: bool = True, **kwargs
 ) -> asyncio.subprocess.Process:
