@@ -9,7 +9,7 @@ from site_manager.tenant_config import load_config, update_config
 
 MEDIAWIKI = fa.APIRouter(prefix="/mediawiki", tags=["mediawiki"])
 
-MAX_BRANDING_UPLOAD_SIZE = 2 * 1024 * 1024  # 2 MB
+MAX_BRANDING_UPLOAD_SIZE = 3 * 1024 * 1024  # 4 MB
 ALLOWED_DEFAULT_SKINS = {"vector-2022", "citizen", "minerva", "timeless"}
 ALLOWED_BRANDING_IMAGE_TYPES = {
     "image/png": ".png",
