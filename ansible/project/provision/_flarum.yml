@@ -14,7 +14,7 @@
           - "app/public/.htaccess"
           - "app/public/web.config"
           # hardlinked as config.php after install
-          - "app/config_temp.php"
+          - "app/config.common.php"
       hardlink_paths:
           - "app/extend.php"
           - "app/flarum"
