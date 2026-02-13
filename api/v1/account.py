@@ -310,7 +310,7 @@ async def delete_site(
 
     site.removed_at = datetime.now()
     site.removed_ip = client_ip
-    site.removal_reason = "Requested by you through settings"
+    site.removal_reason = "Requested by you through settings. This deletion is permanent and cannot be undone."
 
     background_tasks.add_task(
         remove_site, site, skip_backup=True, reason=site.removal_reason
