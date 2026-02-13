@@ -82,6 +82,6 @@ async def kofi_webhook(
     site.donated_amount = (site.donated_amount or 0.0) + amount
     await db.commit()
 
-    update_config(site, {"donated_amount": site.donated_amount})
+    await update_config(site, {"donated_amount": site.donated_amount})
 
     return {"status": "ok"}

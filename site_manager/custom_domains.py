@@ -153,7 +153,7 @@ map $site_id $service_type {{
 
 
 async def _rewrite_urls(site: Site, old_hostname: str) -> None:
-    update_config(site, {"url": f"https://{site.hostname}"})
+    await update_config(site, {"url": f"https://{site.hostname}"})
 
     tenant_root = Path(VARS["paths"]["tenants"]["root"]) / site.tag
     tenant_user = f"tenant_{site.tag}"

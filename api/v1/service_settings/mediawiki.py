@@ -24,7 +24,7 @@ ALLOWED_BRANDING_IMAGE_TYPES = {
 async def get_settings(
     site: t.Annotated[Site, fa.Depends(require_site_type("mediawiki"))],
 ) -> dict:
-    return load_config(site).get("mediawiki", {})
+    return (await load_config(site)).get("mediawiki", {})
 
 
 @MEDIAWIKI.get("/default-skin")
@@ -44,7 +44,7 @@ async def set_default_skin(
             status_code=422,
             detail=f"Invalid default skin. Allowed: {', '.join(sorted(ALLOWED_DEFAULT_SKINS))}",
         )
-    _set_mw_conf(site, "skin", skin)
+    await _set_mw_conf(site, "skin", skin)
     return {"skin": skin}
 
 
@@ -52,7 +52,7 @@ async def set_default_skin(
 async def get_logo(
     site: t.Annotated[Site, fa.Depends(require_site_type("mediawiki"))],
 ) -> dict:
-    mw = load_config(site).get("mediawiki", {})
+    mw = (await load_config(site)).get("mediawiki", {})
     return {"logo": mw.get("logo")}
 
 
@@ -60,7 +60,7 @@ async def get_logo(
 async def get_favicon(
     site: t.Annotated[Site, fa.Depends(require_site_type("mediawiki"))],
 ) -> dict:
-    mw = load_config(site).get("mediawiki", {})
+    mw = (await load_config(site)).get("mediawiki", {})
     return {"favicon": mw.get("favicon")}
 
 
@@ -98,12 +98,12 @@ async def _upload_branding(
 
     url_path = f"{dest_rel}{ext}"
     await write_tenant_file(site, f"app/public{url_path}", content)
-    _set_mw_conf(site, asset, url_path)
+    await _set_mw_conf(site, asset, url_path)
     return url_path
 
 
-def _set_mw_conf(site: Site, key: str, value: str) -> None:
-    config = load_config(site)
+async def _set_mw_conf(site: Site, key: str, value: str) -> None:
+    config = await load_config(site)
     mw = config.get("mediawiki", {})
     mw[key] = value
-    update_config(site, {"mediawiki": mw})
+    await update_config(site, {"mediawiki": mw})

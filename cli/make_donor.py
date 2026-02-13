@@ -24,7 +24,7 @@ async def _main():
             site.donated_amount = (site.donated_amount or 0.0) + args.amount
             await db.commit()
 
-            update_config(site, {"donated_amount": site.donated_amount})
+            await update_config(site, {"donated_amount": site.donated_amount})
 
         print(f"donated_amount={site.donated_amount} for site '{site.tag}'")
     finally:
