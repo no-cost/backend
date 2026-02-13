@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import Site
 from database.session import get_session
 from settings import VARS
+from site_manager import upgrade_site
 from site_manager.custom_domains import (
     CNAMENotFoundError,
     DomainAlreadyLinkedError,
@@ -73,3 +74,13 @@ async def unlink_domain(
     return {
         "message": f"Custom domain has been unlinked. Your site is now at '{canonical}'."
     }
+
+
+@V1_SETTINGS.post("/fixup")
+async def fixup(
+    site: t.Annotated[Site, fa.Depends(get_current_site)],
+) -> dict:
+    """Run migrations and cache clears for the authenticated user's site."""
+
+    await upgrade_site(site)
+    return {"message": f"Fixup completed for site '{site.tag}'."}

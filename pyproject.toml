@@ -40,7 +40,7 @@ restore_site = "cli.restore_site:main"
 make_donor = "cli.make_donor:main"
 site_info = "cli.site_info:main"
 sync_nginx_maps = "cli.sync_nginx_maps:main"
-upgrade_site = "cli.upgrade:main"
+upgrade_site = "cli.upgrade_site:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
