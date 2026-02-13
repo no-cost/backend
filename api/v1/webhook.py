@@ -11,7 +11,7 @@ from database.models import Site
 from database.session import get_session
 from settings import VARS
 from site_manager.tenant_config import update_config
-from utils.mail import send_mail
+from utils.mail import send_donor_thank_you, send_mail
 
 logger = logging.getLogger(__name__)
 
@@ -83,5 +83,13 @@ async def kofi_webhook(
     await db.commit()
 
     await update_config(site, {"donated_amount": site.donated_amount})
+
+    send_donor_thank_you(
+        to=site.admin_email,
+        amount=payload.amount,
+        currency=payload.currency,
+        total=site.donated_amount,
+        has_perks=site.has_donor_perks(),
+    )
 
     return {"status": "ok"}

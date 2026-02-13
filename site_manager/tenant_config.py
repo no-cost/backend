@@ -13,12 +13,14 @@ type config_dict = dict[str, str | int | float | bool | None]
 def _config_path(site: Site) -> Path:
     return Path(VARS["paths"]["tenants"]["root"]) / site.tag / "etc" / "config.json"
 
+
 # using sudo here to avoid permission issues (because config is owned by tenant)
+
 
 async def load_config(site: Site) -> config_dict:
     path = _config_path(site)
     proc = await asyncio.create_subprocess_exec(
-        "sudo", "cat", str(path),
+        f"sudo cat {path}",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )

@@ -9,8 +9,25 @@ from site_manager.tenant_config import load_config, update_config
 
 MEDIAWIKI = fa.APIRouter(prefix="/mediawiki", tags=["mediawiki"])
 
-MAX_BRANDING_UPLOAD_SIZE = 3 * 1024 * 1024  # 4 MB
+MAX_BRANDING_UPLOAD_SIZE = 3 * 1024 * 1024  # 3 MB
 ALLOWED_DEFAULT_SKINS = {"vector-2022", "citizen", "minerva", "timeless"}
+ALLOWED_LANGUAGES = {
+    "en",
+    "de",
+    "fr",
+    "es",
+    "it",
+    "pt",
+    "nl",
+    "pl",
+    "ru",
+    "ja",
+    "zh",
+    "ko",
+    "ar",
+    "cs",
+    "sk",
+}
 ALLOWED_BRANDING_IMAGE_TYPES = {
     "image/png": ".png",
     "image/svg+xml": ".svg",
@@ -82,6 +99,44 @@ async def upload_favicon(
     return {"favicon": url}
 
 
+@MEDIAWIKI.get("/default-language")
+async def get_default_languages(
+    _site: t.Annotated[Site, fa.Depends(require_site_type("mediawiki"))],
+) -> list[str]:
+    return sorted(ALLOWED_LANGUAGES)
+
+
+@MEDIAWIKI.patch("/default-language")
+async def set_default_language(
+    language: t.Annotated[str, fa.Body(embed=True)],
+    site: t.Annotated[Site, fa.Depends(require_site_type("mediawiki"))],
+) -> dict:
+    if language not in ALLOWED_LANGUAGES:
+        raise fa.HTTPException(
+            status_code=422,
+            detail=f"Invalid language. Allowed: {', '.join(sorted(ALLOWED_LANGUAGES))}",
+        )
+    await _set_mw_conf(site, "language", language)
+    return {"language": language}
+
+
+@MEDIAWIKI.get("/hide-powered-by")
+async def get_hide_powered_by(
+    site: t.Annotated[Site, fa.Depends(require_site_type("mediawiki"))],
+) -> dict:
+    mw = (await load_config(site)).get("mediawiki", {})
+    return {"hide_powered_by": mw.get("hide_powered_by", False)}
+
+
+@MEDIAWIKI.patch("/hide-powered-by")
+async def set_hide_powered_by(
+    hide_powered_by: t.Annotated[bool, fa.Body(embed=True)],
+    site: t.Annotated[Site, fa.Depends(require_site_type("mediawiki"))],
+) -> dict:
+    await _set_mw_conf(site, "hide_powered_by", hide_powered_by)
+    return {"hide_powered_by": hide_powered_by}
+
+
 async def _upload_branding(
     site: Site, file: fa.UploadFile, asset: str, dest_rel: str
 ) -> str:
@@ -102,7 +157,7 @@ async def _upload_branding(
     return url_path
 
 
-async def _set_mw_conf(site: Site, key: str, value: str) -> None:
+async def _set_mw_conf(site: Site, key: str, value: str | bool) -> None:
     config = await load_config(site)
     mw = config.get("mediawiki", {})
     mw[key] = value

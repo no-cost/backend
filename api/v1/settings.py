@@ -13,7 +13,9 @@ from site_manager.custom_domains import (
     CNAMENotFoundError,
     DomainAlreadyLinkedError,
     link_custom_domain,
+    rewrite_urls,
     unlink_custom_domain,
+    write_nginx_maps,
 )
 from utils.auth import get_current_site
 
@@ -83,6 +85,46 @@ async def unlink_domain(
     return {
         "message": f"Custom domain has been unlinked. Your site is now at '{canonical}'."
     }
+
+
+class ChangeParentDomainBody(BaseModel):
+    parent_domain: str
+
+
+@V1_SETTINGS.patch("/parent-domain")
+async def change_parent_domain(
+    body: ChangeParentDomainBody,
+    site: t.Annotated[Site, fa.Depends(get_current_site)],
+    db: t.Annotated[AsyncSession, fa.Depends(get_session)],
+) -> dict:
+    """Switch the site to a different parent domain."""
+
+    if body.parent_domain not in VARS["allowed_domains"]:
+        raise fa.HTTPException(
+            status_code=422,
+            detail=f"Invalid parent domain. Choose one of: {', '.join(VARS['allowed_domains'])}",
+        )
+
+    new_hostname = f"{site.tag}.{body.parent_domain}"
+    if site.hostname == new_hostname:
+        raise fa.HTTPException(
+            status_code=409, detail="Site is already on this parent domain"
+        )
+
+    # only allow switching between internal domains, not from a custom domain
+    if site.get_parent_domain() not in VARS["allowed_domains"]:
+        raise fa.HTTPException(
+            status_code=409,
+            detail="Unlink your custom domain first before changing the parent domain",
+        )
+
+    old_hostname = site.hostname
+    site.hostname = new_hostname
+    await db.commit()
+    await write_nginx_maps(db)
+    await rewrite_urls(site, old_hostname)
+
+    return {"message": f"Parent domain changed. Your site is now at '{new_hostname}'."}
 
 
 @V1_SETTINGS.post("/fixup")

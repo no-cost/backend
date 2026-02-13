@@ -5,6 +5,7 @@ import sys
 from database.models import Site
 from database.session import async_session_factory, engine
 from site_manager.tenant_config import update_config
+from utils.mail import send_donor_thank_you
 
 
 async def _main():
@@ -25,6 +26,14 @@ async def _main():
             await db.commit()
 
             await update_config(site, {"donated_amount": site.donated_amount})
+
+            send_donor_thank_you(
+                to=site.admin_email,
+                amount=f"{args.amount:.2f}",
+                currency="EUR",
+                total=site.donated_amount,
+                has_perks=site.has_donor_perks(),
+            )
 
         print(f"donated_amount={site.donated_amount} for site '{site.tag}'")
     finally:

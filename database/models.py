@@ -79,7 +79,7 @@ class Site(Base):
 
     def has_donor_perks(self) -> bool:
         """Returns whether the site admin has donated enough to have perks (such as the footer removed)"""
-        return self.donated_amount is not None and self.donated_amount >= 7.0
+        return self.donated_amount >= 7.0
 
     # clsmethods
     @classmethod

@@ -64,7 +64,7 @@ async def link_custom_domain(db: AsyncSession, site: Site, custom_domain: str) -
     site.hostname = custom_domain
     await db.commit()
     await write_nginx_maps(db)
-    await _rewrite_urls(site, old_hostname)
+    await rewrite_urls(site, old_hostname)
 
 
 async def unlink_custom_domain(
@@ -78,7 +78,7 @@ async def unlink_custom_domain(
     site.hostname = restore_canonical
     await db.commit()
     await write_nginx_maps(db)
-    await _rewrite_urls(site, old_hostname)
+    await rewrite_urls(site, old_hostname)
 
 
 async def write_nginx_maps(db: AsyncSession) -> None:
@@ -152,7 +152,7 @@ map $site_id $service_type {{
     )
 
 
-async def _rewrite_urls(site: Site, old_hostname: str) -> None:
+async def rewrite_urls(site: Site, old_hostname: str) -> None:
     await update_config(site, {"url": f"https://{site.hostname}"})
 
     tenant_root = Path(VARS["paths"]["tenants"]["root"]) / site.tag

@@ -22,11 +22,16 @@ from utils.turnstile import verify_turnstile
 V1_SIGNUP = fa.APIRouter(prefix="/signup", tags=["signup"])
 
 
+@V1_SIGNUP.get("/allowed-domains")
+async def get_allowed_domains() -> list[str]:
+    return VARS["allowed_domains"]
+
+
 class SignupRequest(BaseModel):
     tag: str
     email: EmailStr
     site_type: str
-    parent_domain: str
+    parent_domain: str | None = None
     turnstile_token: str
 
     @field_validator("tag")
@@ -62,7 +67,8 @@ async def signup(
             detail="Invalid site type.",
         )
 
-    if request.parent_domain not in VARS["allowed_domains"]:
+    parent_domain = request.parent_domain or VARS["main_domain"]
+    if parent_domain not in VARS["allowed_domains"]:
         raise fa.HTTPException(
             status_code=400,
             detail="Invalid parent domain.",
@@ -79,7 +85,7 @@ async def signup(
         admin_password=throwaway_password,
         site_type=request.site_type,
         created_ip=client_ip,
-        hostname=f"{request.tag}.{request.parent_domain}",
+        hostname=f"{request.tag}.{parent_domain}",
     )
 
     try:

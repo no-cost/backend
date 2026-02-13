@@ -27,4 +27,5 @@ VARS = {
     },
     "info_mail": environ["MAILTO"],
     "kofi_verification_token": environ["KOFI_VERIFICATION_TOKEN"],
+    "health_check_token": environ["HEALTH_CHECK_TOKEN"],
 }
