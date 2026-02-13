@@ -20,7 +20,9 @@ def _config_path(site: Site) -> Path:
 async def load_config(site: Site) -> config_dict:
     path = _config_path(site)
     proc = await asyncio.create_subprocess_exec(
-        f"sudo cat {path}",
+        "sudo",
+        "cat",
+        f"{path}",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
