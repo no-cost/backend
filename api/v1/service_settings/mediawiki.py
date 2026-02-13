@@ -121,20 +121,20 @@ async def set_default_language(
 
 
 @MEDIAWIKI.get("/hide-powered-by")
-async def get_hide_powered_by(
+async def get_hide_powered_by_mw(
     site: t.Annotated[Site, fa.Depends(require_site_type("mediawiki"))],
 ) -> dict:
     mw = (await load_config(site)).get("mediawiki", {})
-    return {"hide_powered_by": mw.get("hide_powered_by", False)}
+    return {"hide_powered_by_mw": mw.get("hide_powered_by_mw", False)}
 
 
 @MEDIAWIKI.patch("/hide-powered-by")
-async def set_hide_powered_by(
-    hide_powered_by: t.Annotated[bool, fa.Body(embed=True)],
+async def set_hide_powered_by_mw(
+    hide_powered_by_mw: t.Annotated[bool, fa.Body(embed=True)],
     site: t.Annotated[Site, fa.Depends(require_site_type("mediawiki"))],
 ) -> dict:
-    await _set_mw_conf(site, "hide_powered_by", hide_powered_by)
-    return {"hide_powered_by": hide_powered_by}
+    await _set_mw_conf(site, "hide_powered_by_mw", hide_powered_by_mw)
+    return {"hide_powered_by_mw": hide_powered_by_mw}
 
 
 async def _upload_branding(
