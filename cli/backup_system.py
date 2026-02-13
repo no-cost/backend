@@ -24,8 +24,7 @@ def main():
         print(runner.stderr.read())
         print("System backup completed")
     except RuntimeError as e:
-        print(f"System backup failed: {e}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(f"System backup failed: {e}")
 
 
 if __name__ == "__main__":

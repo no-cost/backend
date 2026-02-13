@@ -25,18 +25,14 @@ async def _main():
     args = parser.parse_args()
 
     if args.backup_mode == "periodic" and not args.date:
-        print("Error: --date is required for periodic restores", file=sys.stderr)
-        sys.exit(1)
+        sys.exit("Error: --date is required for periodic restores")
 
     try:
         async with async_session_factory() as db:
             site = await Site.get_by_identifier(db, args.identifier)
 
             if site is None:
-                print(
-                    f"Error: active site '{args.identifier}' not found", file=sys.stderr
-                )
-                sys.exit(1)
+                sys.exit(f"Error: active site '{args.identifier}' not found")
 
         runner = do_restore(
             site,

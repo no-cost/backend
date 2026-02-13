@@ -18,8 +18,7 @@ async def _main():
             site = await Site.get_by_identifier(db, args.identifier, match_removed=True)
 
             if site is None:
-                print(f"Error: site '{args.identifier}' not found", file=sys.stderr)
-                sys.exit(1)
+                sys.exit(f"Error: site '{args.identifier}' not found")
 
         created_cc = get_country_code(site.created_ip) if site.created_ip else None
         last_login_cc = (

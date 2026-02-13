@@ -28,10 +28,7 @@ async def _main():
             site = await Site.get_by_identifier(db, args.identifier)
 
             if site is None:
-                print(
-                    f"Error: active site '{args.identifier}' not found", file=sys.stderr
-                )
-                sys.exit(1)
+                sys.exit(f"Error: active site '{args.identifier}' not found")
 
             parent = _extract_parent_domain(hostname)
 
@@ -39,10 +36,7 @@ async def _main():
                 # switching internal parent domain
                 canonical = f"{site.tag}.{parent}"
                 if site.hostname == canonical:
-                    print(
-                        f"Error: site is already using '{canonical}'", file=sys.stderr
-                    )
-                    sys.exit(1)
+                    sys.exit(f"Error: site is already using '{canonical}'")
                 await unlink_custom_domain(db, site, canonical)
                 print(f"Domain changed to '{canonical}' for site '{site.tag}'")
             else:
@@ -50,11 +44,9 @@ async def _main():
                 await link_custom_domain(db, site, hostname)
                 print(f"Custom domain '{hostname}' linked to site '{site.tag}'")
     except DomainAlreadyLinkedError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(f"Error: {e}")
     except CNAMENotFoundError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(f"Error: {e}")
     finally:
         await engine.dispose()
 

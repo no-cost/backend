@@ -51,8 +51,7 @@ async def _main():
     try:
         args.tag = validate_tag(args.tag)
     except ValueError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(f"Error: {e}")
 
     password = args.password or random_string(16)
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
@@ -72,8 +71,7 @@ async def _main():
                 db.add(site)
                 await db.commit()
             except IntegrityError:
-                print(f"Error: site '{args.tag}' already exists", file=sys.stderr)
-                sys.exit(1)
+                sys.exit(f"Error: site '{args.tag}' already exists")
 
             reset_token = create_reset_token(site.tag, site.admin_password)
             runner = provision_site(

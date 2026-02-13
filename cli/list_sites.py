@@ -106,8 +106,7 @@ async def _main():
         sites = [s for s in sites if get_attic_backup_path(s.tag).exists()]
 
     if not sites:
-        print("No sites match the given filters.", file=sys.stderr)
-        sys.exit(1)
+        sys.exit("No sites match the given filters.")
 
     # build table
     headers = ["TAG", "TYPE", "HOSTNAME", "EMAIL", "CREATED", "STATUS", "DONOR"]
