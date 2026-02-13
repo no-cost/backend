@@ -21,6 +21,13 @@ V1_SETTINGS = fa.APIRouter(prefix="/settings", tags=["settings"])
 V1_SETTINGS.include_router(MEDIAWIKI)
 
 
+@V1_SETTINGS.get("/allowed-domains")
+async def get_allowed_domains(
+    _site: t.Annotated[Site, fa.Depends(get_current_site)],
+) -> list[str]:
+    return VARS["allowed_domains"]
+
+
 class LinkDomainBody(BaseModel):
     domain: str
 

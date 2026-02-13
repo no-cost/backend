@@ -59,11 +59,6 @@ def decode_access_token(token: str) -> str:
     return tag
 
 
-def password_fingerprint(password_hash: str) -> str:
-    """Short hash derived from the bcrypt password hash, used to bind reset tokens to the current password."""
-    return hashlib.sha256(password_hash.encode()).hexdigest()[:16]
-
-
 def create_reset_token(site_tag: str, password_db_hash: str) -> str:
     expires = datetime.now(timezone.utc) + timedelta(hours=48)
     return jwt.encode(
@@ -99,5 +94,44 @@ def decode_reset_token(token: str) -> tuple[str, str]:
     return tag, pfp
 
 
+def create_email_change_token(site_tag: str, new_email: str) -> str:
+    expires = datetime.now(timezone.utc) + timedelta(hours=48)
+    return jwt.encode(
+        {
+            "sub": site_tag,
+            "purpose": "email_change",
+            "new_email": new_email,
+            "exp": expires,
+        },
+        VARS["jwt_secret"],
+        algorithm="HS256",
+    )
+
+
+def decode_email_change_token(token: str) -> tuple[str, str]:
+    """Returns (site_tag, new_email)."""
+
+    try:
+        payload = jwt.decode(token, VARS["jwt_secret"], algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        raise fa.HTTPException(status_code=400, detail="Confirmation link has expired")
+    except jwt.InvalidTokenError:
+        raise fa.HTTPException(status_code=400, detail="Invalid confirmation link")
+
+    if payload.get("purpose") != "email_change":
+        raise fa.HTTPException(status_code=400, detail="Invalid confirmation link")
+
+    tag = payload.get("sub")
+    new_email = payload.get("new_email")
+    if tag is None or new_email is None:
+        raise fa.HTTPException(status_code=400, detail="Invalid confirmation link")
+
+    return tag, new_email
+
+
 def verify_password(plain: str, hashed: str) -> bool:
     return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+
+
+def password_fingerprint(password_hash: str) -> str:
+    return hashlib.sha256(password_hash.encode()).hexdigest()[:16]

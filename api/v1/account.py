@@ -19,7 +19,9 @@ from settings import VARS
 from site_manager import backup_site, remove_site
 from utils.auth import (
     create_access_token,
+    create_email_change_token,
     create_reset_token,
+    decode_email_change_token,
     decode_reset_token,
     get_current_site,
     password_fingerprint,
@@ -152,6 +154,86 @@ async def reset_password(
     await db.commit()
 
     return {"message": "Password has been set successfully."}
+
+
+class ChangePasswordBody(BaseModel):
+    old_password: str
+    new_password: str
+
+
+@V1_ACCOUNT.post("/change-password")
+async def change_password(
+    body: ChangePasswordBody,
+    site: t.Annotated[Site, fa.Depends(get_current_site)],
+    db: t.Annotated[AsyncSession, fa.Depends(get_session)],
+) -> dict:
+    if not verify_password(body.old_password, site.admin_password):
+        raise fa.HTTPException(status_code=403, detail="Incorrect password")
+
+    site.admin_password = bcrypt.hashpw(
+        body.new_password.encode("utf-8"), bcrypt.gensalt()
+    ).decode("utf-8")
+    await db.commit()
+
+    return {"message": "Password has been changed successfully."}
+
+
+class ChangeEmailBody(BaseModel):
+    email: EmailStr
+    password: str
+
+
+@V1_ACCOUNT.post("/change-email")
+async def request_email_change(
+    body: ChangeEmailBody,
+    site: t.Annotated[Site, fa.Depends(get_current_site)],
+):
+    """Send a confirmation link to the new e-mail address."""
+
+    if not verify_password(body.password, site.admin_password):
+        raise fa.HTTPException(status_code=403, detail="Incorrect password")
+
+    if body.email == site.admin_email:
+        raise fa.HTTPException(
+            status_code=400, detail="New e-mail is the same as the current one"
+        )
+
+    token = create_email_change_token(site.tag, body.email)
+    link = f"https://{VARS['main_domain']}/confirm-email?token={token}"
+
+    send_mail(
+        to=body.email,
+        subject="Confirm e-mail change — no-cost.site",
+        body=(
+            f"An e-mail change was requested for site '{site.tag}'.\n\n"
+            f"To confirm this new e-mail address, visit the following link:\n{link}\n\n"
+            "If you did not request this, you can safely ignore this e-mail."
+        ),
+    )
+
+    return {"message": "A confirmation link has been sent to the new e-mail address."}
+
+
+class ConfirmEmailChangeBody(BaseModel):
+    token: str
+
+
+@V1_ACCOUNT.post("/change-email/confirm")
+async def confirm_email_change(
+    body: ConfirmEmailChangeBody,
+    db: t.Annotated[AsyncSession, fa.Depends(get_session)],
+):
+    """Confirm an e-mail change using a valid token."""
+
+    tag, new_email = decode_email_change_token(body.token)
+    site = await Site.get_by_tag_or_hostname(db, tag)
+    if site is None:
+        raise fa.HTTPException(status_code=404, detail="Site not found")
+
+    site.admin_email = new_email
+    await db.commit()
+
+    return {"message": "E-mail address has been updated."}
 
 
 @V1_ACCOUNT.get("/export")
