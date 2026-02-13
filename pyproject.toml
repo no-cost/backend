@@ -33,6 +33,7 @@ dev = [
 backup_site = "cli.backup_site:main"
 backup_system = "cli.backup_system:main"
 create_site = "cli.create_site:main"
+link_domain = "cli.link_domain:main"
 list_sites = "cli.list_sites:main"
 remove_site = "cli.remove_site:main"
 restore_site = "cli.restore_site:main"
