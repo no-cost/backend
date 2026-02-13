@@ -4,6 +4,7 @@ import fastapi as fa
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.v1.service_settings.mediawiki import MEDIAWIKI
 from database.models import Site
 from database.session import get_session
 from settings import VARS
@@ -17,6 +18,7 @@ from site_manager.custom_domains import (
 from utils.auth import get_current_site
 
 V1_SETTINGS = fa.APIRouter(prefix="/settings", tags=["settings"])
+V1_SETTINGS.include_router(MEDIAWIKI)
 
 
 class LinkDomainBody(BaseModel):

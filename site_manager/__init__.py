@@ -1,3 +1,4 @@
+import tempfile
 from pathlib import Path
 
 from database.models import Site
@@ -8,7 +9,7 @@ from site_manager.runner import (
     remove_tenant,
     restore_tenant,
 )
-from utils.cmd import run_cmd_as_tenant
+from utils.cmd import run_cmd, run_cmd_as_tenant
 
 
 def provision_site(
@@ -100,3 +101,23 @@ def restore_site(
         backup_mode=backup_mode,
         backup_date=backup_date,
     )
+
+
+async def write_tenant_file(site: Site, dest_rel: str, content: bytes) -> None:
+    tenant_root = Path(VARS["paths"]["tenants"]["root"]) / site.tag
+    dest = tenant_root / dest_rel
+    tenant_user = f"tenant_{site.tag}"
+
+    # api server runs as different user than the tenant,
+    # so we need to upload as temp and then ensure correct ownership
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        tmp.write(content)
+        tmp_path = tmp.name
+
+    try:
+        await run_cmd_as_tenant(tenant_user, f"mkdir -p {dest.parent}")
+        await run_cmd(f"sudo mv {tmp_path} {dest}")
+        await run_cmd(f"sudo chmod 644 {dest}")
+        await run_cmd(f"sudo chown {tenant_user}:{tenant_user} {dest}")
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
