@@ -4,7 +4,8 @@ import fastapi as fa
 
 from api.v1.service_settings import require_site_type
 from database.models import Site
-from site_manager.tenant_config import load_config, update_config, write_tenant_file
+from site_manager import write_tenant_file
+from site_manager.tenant_config import load_config, update_config
 
 MEDIAWIKI = fa.APIRouter(prefix="/mediawiki", tags=["mediawiki"])
 
