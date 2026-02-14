@@ -192,12 +192,15 @@ async def _write_configs_and_reload(
 
 
 async def _obtain_certificate(domain: str) -> None:
-    await run_cmd(f"sudo certbot certonly --webroot -w {CERTBOT_WEBROOT} -d {domain}")
+    await run_cmd(
+        f"sudo -u www-data certbot certonly --webroot -w {CERTBOT_WEBROOT} -d {domain}"
+    )
 
 
 async def _delete_certificate(domain: str) -> None:
     await run_cmd(
-        f"sudo certbot delete --cert-name {domain} --non-interactive", check=False
+        f"sudo -u www-data certbot delete --cert-name {domain} --non-interactive",
+        check=False,
     )
 
 
