@@ -25,7 +25,6 @@
             path:
                 - /etc
                 - /root
-                - /srv/certbot
             dest: "{{ backup_file }}"
             format: gz
         tags: [always]

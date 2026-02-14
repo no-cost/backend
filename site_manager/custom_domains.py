@@ -11,7 +11,7 @@ from utils.cmd import run_cmd, run_cmd_as_tenant
 
 NGINX_MAP_PATH = Path("/etc/nginx/maps/sites.conf")
 CUSTOM_SERVER_NAMES_PATH = Path("/etc/nginx/snippets/custom-server-names.conf")
-CERTBOT_WEBROOT = Path("/srv/certbot")
+CERTBOT_WEBROOT = Path("/var/lib/letsencrypt")
 CNAME_TARGET = f"cname.{VARS['main_domain']}"
 
 

@@ -6,7 +6,7 @@ from site_manager.runner import backup_system as do_backup
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Backup system directories (/etc, /root, /srv/certbot)"
+        description="Backup system directories (/etc, /root)"
     )
     parser.add_argument(
         "--delete-older-than",
