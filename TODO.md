@@ -7,4 +7,3 @@
 - [ ] add sync files functionality to upgrade_site cmd (to link missing/unlink removed hardlinks, etc.), just in case the apps change their file structure
 - [ ] add no-cost.site footer to all apps, remove if donated
 - [ ] add more mediawiki modules
-- [ ] monitoring via API + BetterStack

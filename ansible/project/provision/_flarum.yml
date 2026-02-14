@@ -62,6 +62,16 @@
       force: true
   tags: [always]
 
+- name: Symlink storage/logs to tenant logs directory
+  ansible.builtin.file:
+      src: "../../logs/"
+      dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/storage/logs"
+      state: link
+      force: true
+      owner: "tenant_{{ tenant_tag }}"
+      group: "tenant_{{ tenant_tag }}"
+  tags: [always]
+
 - name: Generate password reset token for admin
   ansible.builtin.set_fact:
       _flarum_reset_token: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=40') }}"
