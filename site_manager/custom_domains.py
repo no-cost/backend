@@ -1,5 +1,3 @@
-import asyncio
-import subprocess
 from pathlib import Path
 
 import dns.resolver
@@ -9,17 +7,16 @@ from database.models import Site
 from settings import VARS
 from site_manager import upgrade_site
 from site_manager.tenant_config import update_config
-from utils.cmd import run_cmd_as_tenant
+from utils.cmd import run_cmd, run_cmd_as_tenant
 
 NGINX_MAP_PATH = Path("/etc/nginx/maps/sites.conf")
 CUSTOM_SERVER_NAMES_PATH = Path("/etc/nginx/snippets/custom-server-names.conf")
+CERTBOT_WEBROOT = Path("/srv/certbot")
 CNAME_TARGET = f"cname.{VARS['main_domain']}"
 
 
 def check_cname(custom_domain: str) -> bool:
-    """
-    Check if a custom domain has a CNAME record pointing to `cname.<main_domain>`.
-    """
+    """Check if a custom domain has a CNAME record pointing to `cname.<main_domain>`"""
 
     try:
         answers = dns.resolver.resolve(custom_domain, "CNAME")
@@ -60,6 +57,10 @@ async def link_custom_domain(db: AsyncSession, site: Site, custom_domain: str) -
             f"CNAME record for '{custom_domain}' must point to '{CNAME_TARGET}'"
         )
 
+    # obtain TLS certificate before switching hostname, so a failure
+    # leaves the site on its old (working) domain
+    await _obtain_certificate(custom_domain)
+
     old_hostname = site.hostname
     site.hostname = custom_domain
     await db.commit()
@@ -78,6 +79,7 @@ async def unlink_custom_domain(
     site.hostname = restore_canonical
     await db.commit()
     await write_nginx_maps(db)
+    await _delete_certificate(old_hostname)
     await rewrite_urls(site, old_hostname)
 
 
@@ -147,9 +149,7 @@ map $site_id $service_type {{
     if custom_hostnames:
         server_names_config += f"server_name {' '.join(custom_hostnames)};\n"
 
-    await asyncio.to_thread(
-        _write_configs_and_reload, sites_config, server_names_config
-    )
+    await _write_configs_and_reload(sites_config, server_names_config)
 
 
 async def rewrite_urls(site: Site, old_hostname: str) -> None:
@@ -168,19 +168,6 @@ async def rewrite_urls(site: Site, old_hostname: str) -> None:
     await upgrade_site(site)
 
 
-def _write_configs_and_reload(sites_config: str, server_names_config: str) -> None:
-    NGINX_MAP_PATH.write_text(sites_config)
-    CUSTOM_SERVER_NAMES_PATH.write_text(server_names_config)
-
-    # do not run nginx -t as nocost can't read nginx conf files
-    # for the same reason has to run via systemctl
-    subprocess.run(["sudo", "systemctl", "reload", "nginx"], check=True)
-
-
-def _is_internal_domain(hostname: str) -> bool:
-    return any(hostname.endswith(f".{domain}") for domain in VARS["allowed_domains"])
-
-
 class CustomDomainError(Exception):
     """Base exception for custom domain operations."""
 
@@ -191,3 +178,28 @@ class CNAMENotFoundError(CustomDomainError):
 
 class DomainAlreadyLinkedError(CustomDomainError):
     """Domain is already linked to this or another site."""
+
+
+async def _write_configs_and_reload(
+    sites_config: str, server_names_config: str
+) -> None:
+    NGINX_MAP_PATH.write_text(sites_config)
+    CUSTOM_SERVER_NAMES_PATH.write_text(server_names_config)
+
+    # do not run nginx -t as nocost can't read nginx conf files
+    # for the same reason has to run via systemctl
+    await run_cmd("sudo systemctl reload nginx")
+
+
+async def _obtain_certificate(domain: str) -> None:
+    await run_cmd(f"sudo certbot certonly --webroot -w {CERTBOT_WEBROOT} -d {domain}")
+
+
+async def _delete_certificate(domain: str) -> None:
+    await run_cmd(
+        f"sudo certbot delete --cert-name {domain} --non-interactive", check=False
+    )
+
+
+def _is_internal_domain(hostname: str) -> bool:
+    return any(hostname.endswith(f".{domain}") for domain in VARS["allowed_domains"])
