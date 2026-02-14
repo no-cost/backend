@@ -1,6 +1,8 @@
 import re
 import secrets
 
+from settings import BLACKLISTED_TAGS
+
 TAG_PATTERN = re.compile(r"^[a-zA-Z0-9_]+$")
 
 
@@ -9,6 +11,8 @@ def random_string(*args, **kwargs) -> str:
 
 
 def validate_tag(tag: str) -> str:
+    if tag in BLACKLISTED_TAGS:
+        raise ValueError("Tag is blacklisted.")
     if len(tag) > 32:
         raise ValueError("Tag must be less than 32 characters.")
     if len(tag) < 3:
