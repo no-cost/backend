@@ -6,7 +6,6 @@ import bcrypt
 import fastapi as fa
 from fastapi import BackgroundTasks
 from pydantic import BaseModel, EmailStr, field_validator
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Site
@@ -88,13 +87,18 @@ async def signup(
         hostname=f"{request.tag}.{parent_domain}",
     )
 
-    try:
-        db.add(site)
-        await db.commit()
-    except IntegrityError as e:
-        raise fa.HTTPException(
-            status_code=400, detail="A site with this tag already exists"
-        ) from e
+    # if a deleted site with this tag exists, purge it to free the tag
+    existing = await db.get(Site, request.tag)
+    if existing:
+        if existing.removed_at is None:
+            raise fa.HTTPException(
+                status_code=400, detail="A site with this tag already exists"
+            )
+        await db.delete(existing)
+        await db.flush()
+
+    db.add(site)
+    await db.commit()
 
     reset_token = create_reset_token(site.tag, site.admin_password)
     background_tasks.add_task(_provision_and_finalize, site.tag, reset_token)

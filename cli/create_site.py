@@ -4,7 +4,6 @@ import sys
 from datetime import datetime
 
 import bcrypt
-from sqlalchemy.exc import IntegrityError
 
 from database.models import Site
 from database.session import async_session_factory, engine
@@ -67,11 +66,16 @@ async def _main():
                 hostname=hostname,
             )
 
-            try:
-                db.add(site)
-                await db.commit()
-            except IntegrityError:
-                sys.exit(f"Error: site '{args.tag}' already exists")
+            # if a deleted site with this tag exists, purge it to free the tag
+            existing = await db.get(Site, args.tag)
+            if existing:
+                if existing.removed_at is None:
+                    sys.exit(f"Error: site '{args.tag}' already exists")
+                await db.delete(existing)
+                await db.flush()
+
+            db.add(site)
+            await db.commit()
 
             reset_token = create_reset_token(site.tag, site.admin_password)
             runner = provision_site(
