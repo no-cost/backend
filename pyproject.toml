@@ -42,5 +42,9 @@ site_info = "cli.site_info:main"
 sync_nginx_maps = "cli.sync_nginx_maps:main"
 upgrade_site = "cli.upgrade_site:main"
 
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+asyncio_mode = "auto"
+
 [tool.setuptools.packages.find]
 where = ["."]

@@ -4,7 +4,6 @@ from sqlalchemy.exc import IntegrityError
 from database.models import Site
 
 
-@pytest.mark.asyncio
 async def test_db_exception(test_db_session):
     with pytest.raises(IntegrityError):
         async with test_db_session as session:

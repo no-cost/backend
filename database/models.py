@@ -75,11 +75,11 @@ class Site(Base):
 
     def is_donor(self) -> bool:
         """Returns whether the site admin has donated"""
-        return self.donated_amount > 0.0
+        return (self.donated_amount or 0) > 0.0
 
     def has_donor_perks(self) -> bool:
         """Returns whether the site admin has donated enough to have perks (such as the footer removed)"""
-        return self.donated_amount >= 7.0
+        return (self.donated_amount or 0) >= 7.0
 
     # clsmethods
     @classmethod

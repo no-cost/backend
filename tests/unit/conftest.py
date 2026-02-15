@@ -1,7 +1,3 @@
-"""
-Fixtures for unit tests, stuff like setting up the DB, cleanup, etc...
-"""
-
 import os
 
 os.environ.setdefault("ALLOWED_DOMAINS", "test.local,test2.local")
@@ -12,25 +8,21 @@ os.environ.setdefault("TENANTS_ROOT", "/tmp/test_tenants")
 os.environ.setdefault("SKELETON_ROOT", "/tmp/test_skeleton")
 os.environ.setdefault("BACKUP_HOST_ROOT", "/tmp/test_backups")
 os.environ.setdefault("BACKUP_ATTIC_ROOT", "/tmp/test_backup_attic")
-
-from contextlib import asynccontextmanager
+os.environ.setdefault("BACKUP_SYSTEM_ROOT", "/tmp/test_backup_system")
+os.environ.setdefault("JWT_SECRET", "test-jwt-secret")
+os.environ.setdefault("TURNSTILE_KEY", "test-turnstile-key")
+os.environ.setdefault("MAILTO", "test@test.local")
+os.environ.setdefault("KOFI_VERIFICATION_TOKEN", "test-kofi-token")
+os.environ.setdefault("HEALTH_CHECK_TOKEN", "test-health-token")
+os.environ.setdefault("INTEGRATION_TEST_TOKEN", "test-integration-token")
 
 import pytest_asyncio
-from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from database.models import Base
-from database.session import get_session
-from main import API
 
 test_engine = create_async_engine("sqlite+aiosqlite:///test_database.sqlite")
 test_async_session_factory = async_sessionmaker[AsyncSession](test_engine)
-
-
-@asynccontextmanager
-async def get_test_session():
-    async with test_async_session_factory() as session:
-        yield session
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -45,18 +37,5 @@ async def setup_test_db():
 
 @pytest_asyncio.fixture(scope="function")
 async def test_db_session(setup_test_db):
-    async with get_test_session() as session:
+    async with test_async_session_factory() as session:
         yield session
-
-
-@pytest_asyncio.fixture(scope="function")
-async def client(test_db_session):
-    API.dependency_overrides[get_session] = lambda: get_test_session()
-
-    try:
-        async with AsyncClient(
-            transport=ASGITransport(app=API), base_url="http://no-cost.local"
-        ) as ac:
-            yield ac
-    finally:
-        API.dependency_overrides.pop(get_session)

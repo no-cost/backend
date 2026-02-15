@@ -13,7 +13,7 @@ from database.session import async_session_factory, get_session
 from settings import VARS
 from site_manager import provision_site
 from site_manager.custom_domains import write_nginx_maps
-from utils import random_string, validate_tag
+from utils import INTTEST_TAG_PREFIX, is_tag_blacklisted, random_string, validate_tag
 from utils.auth import create_reset_token
 from utils.ip import get_client_ip
 from utils.turnstile import verify_turnstile
@@ -51,6 +51,7 @@ async def signup(
     background_tasks: BackgroundTasks,
     db: t.Annotated[AsyncSession, fa.Depends(get_session)],
     client_ip: t.Annotated[str | None, fa.Depends(get_client_ip)],
+    x_test_token: t.Annotated[str | None, fa.Header()] = None,
 ):
     """
     Create and install a new site.
@@ -58,7 +59,16 @@ async def signup(
     The site installation happens in the background after the response is sent.
     """
 
-    await verify_turnstile(request.turnstile_token)
+    # integration tests pass X-Test-Token to bypass turnstile and tag blacklist
+    is_test_request = (
+        x_test_token == VARS["integration_test_token"]
+        and request.tag.startswith(INTTEST_TAG_PREFIX)
+    )
+
+    if not is_test_request:
+        await verify_turnstile(request.turnstile_token)
+        if is_tag_blacklisted(request.tag):
+            raise fa.HTTPException(status_code=400, detail="This tag is not allowed.")
 
     if request.site_type not in VARS["available_site_types"]:
         raise fa.HTTPException(
