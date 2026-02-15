@@ -62,12 +62,17 @@
       force: true
   tags: [always]
 
+- name: Remove storage/logs directory created by installer
+  ansible.builtin.file:
+      path: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/storage/logs"
+      state: absent
+  tags: [always]
+
 - name: Symlink storage/logs to tenant logs directory
   ansible.builtin.file:
       src: "../../logs/"
       dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/app/storage/logs"
       state: link
-      force: true
       owner: "tenant_{{ tenant_tag }}"
       group: "tenant_{{ tenant_tag }}"
   tags: [always]
