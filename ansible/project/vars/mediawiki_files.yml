@@ -1,0 +1,42 @@
+---
+mount_paths:
+    - "app/public/extensions"
+    - "app/public/includes"
+    - "app/public/languages"
+    - "app/public/maintenance"
+    - "app/public/mw-config"
+    - "app/public/resources"
+    - "app/public/skins"
+    - "app/public/sql"
+    - "app/public/vendor"
+
+exclude_paths:
+    - "app/public/.gitignore"
+    - "app/public/CODE_OF_CONDUCT.md"
+    - "app/public/COPYING"
+    - "app/public/CREDITS"
+    - "app/public/README.md"
+    - "app/public/UPGRADE"
+    - "app/public/bundlesize.config.json"
+    - "app/public/composer.json"
+    - "app/public/composer.local.json"
+    - "app/public/composer.lock"
+    - "app/public/LocalSettings.common.php" # hardlinked as LocalSettings.php after install
+
+hardlink_paths:
+    - "app/public/api.php"
+    - "app/public/autoload.php"
+    - "app/public/img_auth.php"
+    - "app/public/index.php"
+    - "app/public/load.php"
+    - "app/public/modules.php"
+    - "app/public/opensearch_desc.php"
+    - "app/public/rest.php"
+    - "app/public/secrets.php"
+    - "app/public/thumb.php"
+    - "app/public/thumb_handler.php"
+
+# hardlinks where skeleton source has a different name than tenant dest
+renamed_hardlinks:
+    - src: "app/public/LocalSettings.common.php"
+      dest: "app/public/LocalSettings.php"

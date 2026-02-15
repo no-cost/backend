@@ -11,10 +11,16 @@ async def _main():
     parser.add_argument("--tag", help="Tenant to upgrade")
     parser.add_argument(
         "--service",
-        "-s",
         help="Upgrade all tenants of this service type",
         choices=["flarum", "mediawiki", "wordpress"],
         default=None,
+    )
+    parser.add_argument(
+        "--sync-files",
+        "-s",
+        help="Re-sync file structure from skeleton before upgrading",
+        action="store_true",
+        default=False,
     )
 
     args = parser.parse_args()
@@ -29,7 +35,7 @@ async def _main():
         async with async_session_factory() as db:
             async for site in Site.get_all_active(db, *filters):
                 print(f"Upgrading {site.tag} ({site.site_type})...")
-                await upgrade_site(site)
+                await upgrade_site(site, sync_files=args.sync_files)
                 print(f"ok {site.tag}")
     finally:
         await engine.dispose()

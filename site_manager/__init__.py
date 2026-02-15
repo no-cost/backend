@@ -8,6 +8,7 @@ from site_manager.runner import (
     provision_tenant,
     remove_tenant,
     restore_tenant,
+    sync_tenant_files,
 )
 from utils.cmd import run_cmd, run_cmd_as_tenant
 
@@ -31,10 +32,14 @@ def provision_site(
 
 async def upgrade_site(
     site: Site,
+    sync_files: bool = False,
 ) -> None:
     tenant_root = Path(VARS["paths"]["tenants"]["root"]) / site.tag
     tenant_pub_dir = tenant_root / "public"
     tenant_user = f"tenant_{site.tag}"
+
+    if sync_files:
+        sync_tenant_files(tenant_tag=site.tag, service_type=site.site_type)
 
     match site.site_type:
         case "flarum":

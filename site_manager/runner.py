@@ -143,6 +143,19 @@ def restore_tenant(
     )
 
 
+def sync_tenant_files(
+    tenant_tag: str,
+    service_type: str,
+) -> Runner:
+    return run_playbook(
+        "sync_files_main.yml",
+        extravars={
+            "tenant_tag": tenant_tag,
+            "service_type": service_type,
+        },
+    )
+
+
 def backup_system(
     delete_older_than_days: int = 7,
 ) -> Runner:

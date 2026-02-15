@@ -1,0 +1,39 @@
+---
+# resyncs tenant file structure from skeleton
+#
+#   - tenant_tag
+#   - service_type: flarum|mediawiki|wordpress
+
+- name: Sync tenant files
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: true
+  tasks:
+      - name: Load file structure vars
+        ansible.builtin.include_vars:
+            file: "vars/{{ service_type }}_files.yml"
+        tags: [always]
+
+      - name: Sync skeleton structure
+        ansible.builtin.include_tasks: ./helpers/copy_structure.yml
+        tags: [always]
+
+      - name: Sync usr/lib hardlinks
+        ansible.posix.synchronize:
+            src: "{{ paths.tenants.skeleton_root }}/{{ service_type }}/usr/lib/"
+            dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/usr/lib"
+            rsync_opts:
+                - "--link-dest={{ paths.tenants.skeleton_root }}/{{ service_type }}/usr/lib"
+        delegate_to: localhost
+        tags: [always]
+
+      - name: Refresh renamed hardlinks
+        ansible.builtin.file:
+            src: "{{ paths.tenants.skeleton_root }}/{{ service_type }}/{{ item.src }}"
+            dest: "{{ paths.tenants.root }}/{{ tenant_tag }}/{{ item.dest }}"
+            state: hard
+            force: true
+        loop: "{{ renamed_hardlinks | default([]) }}"
+        when: renamed_hardlinks | default([]) | length > 0
+        tags: [always]

@@ -1,0 +1,24 @@
+---
+mount_paths:
+    - "app/vendor"
+
+exclude_paths:
+    - "app/LICENSE"
+    - "app/README.md"
+    - "app/composer.json"
+    - "app/composer.lock"
+    - "app/public/.htaccess"
+    - "app/public/web.config"
+    - "app/config.common.php" # hardlinked as config.php after install
+    - "app/storage/logs" # symlinked to ../../logs/ per-tenant
+
+hardlink_paths:
+    - "app/extend.php"
+    - "app/flarum"
+    - "app/site.php"
+    - "app/public/index.php"
+
+# hardlinks where skeleton source has a different name than tenant dest
+renamed_hardlinks:
+    - src: "app/config.common.php"
+      dest: "app/config.php"

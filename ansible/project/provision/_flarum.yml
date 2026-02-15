@@ -1,26 +1,13 @@
 ---
 # root in /app/
 
+- name: Load file structure vars
+  ansible.builtin.include_vars:
+      file: ../vars/flarum_files.yml
+  tags: [always]
+
 - name: Copy skeleton structure and mount vendor
   ansible.builtin.include_tasks: ../helpers/copy_structure.yml
-  vars:
-      mount_paths:
-          - "app/vendor"
-      exclude_paths:
-          - "app/LICENSE"
-          - "app/README.md"
-          - "app/composer.json"
-          - "app/composer.lock"
-          - "app/public/.htaccess"
-          - "app/public/web.config"
-          # hardlinked as config.php after install
-          - "app/config.common.php"
-      hardlink_paths:
-          - "app/extend.php"
-          - "app/flarum"
-          - "app/site.php"
-          - "app/public/index.php"
-      service_type: "flarum"
   tags: [always]
 
 - name: Render tenant config
