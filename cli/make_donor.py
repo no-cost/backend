@@ -27,13 +27,15 @@ async def _main():
 
             await update_config(site, {"donated_amount": site.donated_amount})
 
-            send_donor_thank_you(
-                to=site.admin_email,
-                amount=f"{args.amount:.2f}",
-                currency="EUR",
-                total=site.donated_amount,
-                has_perks=site.has_donor_perks(),
-            )
+            if args.amount > 0:
+                print(f"Sending thank you email to {site.admin_email}")
+                send_donor_thank_you(
+                    to=site.admin_email,
+                    amount=f"{args.amount:.2f}",
+                    currency="EUR",
+                    total=site.donated_amount,
+                    has_perks=site.has_donor_perks(),
+                )
 
         print(f"donated_amount={site.donated_amount} for site '{site.tag}'")
     finally:
