@@ -114,11 +114,11 @@ async def _provision_and_finalize(site_tag: str, reset_token: str):
     async with async_session_factory() as db:
         site = await db.get(Site, site_tag)
 
-        # so it doesn't block the event loop, so it can serve other reqs
-        # it still waits here before setting installed_at
-        await asyncio.to_thread(provision_site, site, reset_token)
+    # runs outside the session so we don't hold a DB connection during provisioning
+    await asyncio.to_thread(provision_site, site, reset_token)
 
+    async with async_session_factory() as db:
+        site = await db.get(Site, site_tag)
         site.installed_at = datetime.now()
         await db.commit()
-
         await write_nginx_maps(db)
