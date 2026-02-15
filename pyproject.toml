@@ -19,9 +19,10 @@ dependencies = [
     "ansible-runner",
     "python-dotenv",
     "geoip2",
+]
 
-    # integration tests after deploy
-    "httpx",
+[project.optional-dependencies]
+dev = [
     "aiosqlite",
     "pytest",
     "pytest-asyncio",
