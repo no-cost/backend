@@ -6,10 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-API_BASE_URL = os.environ.get(
-    "API_BASE_URL",
-    f"https://{os.environ.get('ALLOWED_DOMAINS', 'localhost').split(',')[0]}",
-)
+API_BASE_URL = f"https://api.{os.environ['MAIN_DOMAIN']}"
 INTEGRATION_TEST_TOKEN = os.environ.get("INTEGRATION_TEST_TOKEN", "")
 
 
