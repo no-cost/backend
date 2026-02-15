@@ -21,7 +21,9 @@ def test_password_fingerprint_consistent():
 
 
 def test_password_fingerprint_different_hashes():
-    assert password_fingerprint("$2b$12$blabla") != password_fingerprint("$2b$12$foobar")
+    assert password_fingerprint("$2b$12$blabla") != password_fingerprint(
+        "$2b$12$foobar"
+    )
 
 
 def test_password_fingerprint_length():

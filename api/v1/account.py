@@ -95,15 +95,17 @@ async def account(
 
 class ResetPasswordRequestBody(BaseModel):
     site: str
-    turnstile_token: str
+    turnstile_token: str = ""
 
 
 @V1_ACCOUNT.post("/reset-password/request")
 async def request_password_reset(
     body: ResetPasswordRequestBody,
     db: t.Annotated[AsyncSession, fa.Depends(get_session)],
+    x_test_token: t.Annotated[str | None, fa.Header()] = None,
 ):
-    await verify_turnstile(body.turnstile_token)
+    if not x_test_token == VARS["integration_test_token"]:
+        await verify_turnstile(body.turnstile_token)
 
     site = await Site.get_by_tag_or_hostname(db, body.site)
     if site is None:
@@ -112,6 +114,11 @@ async def request_password_reset(
         }
 
     token = create_reset_token(site.tag, site.admin_password)
+
+    # integration tests get the token directly, no email
+    if x_test_token == VARS["integration_test_token"]:
+        return {"token": token}
+
     link = f"https://{VARS['main_domain']}/reset-password?token={token}"
 
     send_mail(
