@@ -19,10 +19,8 @@ dependencies = [
     "ansible-runner",
     "python-dotenv",
     "geoip2",
-]
 
-[project.optional-dependencies]
-dev = [
+    # integration tests after deploy
     "httpx",
     "aiosqlite",
     "pytest",
@@ -45,6 +43,9 @@ upgrade_site = "cli.upgrade_site:main"
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
 asyncio_mode = "auto"
+
+[tool.coverage.run]
+omit = ["cli/*", "tests/*", ".venv/*"]
 
 [tool.setuptools.packages.find]
 where = ["."]
