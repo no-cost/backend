@@ -35,7 +35,10 @@ async def _main():
         async with async_session_factory() as db:
             async for site in Site.get_all_active(db, *filters):
                 print(f"Upgrading {site.tag} ({site.site_type})...")
-                await upgrade_site(site, sync_files=args.sync_files)
+                result = await upgrade_site(site, sync_files=args.sync_files)
+                if result is not None:
+                    print(result.stdout.read())
+                    print(result.stderr.read())
                 print(f"ok {site.tag}")
     finally:
         await engine.dispose()

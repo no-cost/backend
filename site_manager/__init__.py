@@ -33,13 +33,14 @@ def provision_site(
 async def upgrade_site(
     site: Site,
     sync_files: bool = False,
-) -> None:
+):
     tenant_root = Path(VARS["paths"]["tenants"]["root"]) / site.tag
     tenant_pub_dir = tenant_root / "public"
     tenant_user = f"tenant_{site.tag}"
 
+    result = None
     if sync_files:
-        sync_tenant_files(tenant_tag=site.tag, service_type=site.site_type)
+        result = sync_tenant_files(tenant_tag=site.tag, service_type=site.site_type)
 
     match site.site_type:
         case "flarum":
@@ -57,6 +58,8 @@ async def upgrade_site(
             await run_cmd_as_tenant(
                 tenant_user, "wp core update-db", cwd=tenant_pub_dir
             )
+
+    return result
 
 
 def remove_site(
