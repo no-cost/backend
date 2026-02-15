@@ -30,7 +30,7 @@ def site(request):
 
     state = {
         "tag": tag,
-        "email": f"{tag}@test.local",
+        "email": f"{tag}@example.com",
         "site_type": site_type,
     }
 
