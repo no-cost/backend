@@ -99,7 +99,7 @@ async def _main():
             async for site in Site.get_all_active(db):
                 if not site.is_installed():
                     continue
-                if site.created_at > cutoff:
+                if site.installed_at > cutoff:
                     continue
                 if site.has_donor_perks():
                     continue
