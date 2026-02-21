@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing as t
 from datetime import datetime
 
-from sqlalchemy import String, func, or_, select
+from sqlalchemy import ForeignKey, Index, String, func, or_, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 if t.TYPE_CHECKING:
@@ -154,3 +154,21 @@ class Site(Base):
             cls.admin_email == identifier,
             cls.hostname == identifier,
         )
+
+
+class SiteStats(Base):
+    """Historical resource usage snapshot for a tenant site."""
+
+    __tablename__ = "site_stats"
+    __table_args__ = (Index("ix_site_stats_tag_collected", "site_tag", "collected_at"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    site_tag: Mapped[str] = mapped_column(
+        String(length=32), ForeignKey("sites.tag"), nullable=False
+    )
+    content_count: Mapped[int] = mapped_column(default=0)
+    user_count: Mapped[int] = mapped_column(default=0)
+    assets_mb: Mapped[float] = mapped_column(default=0.0)
+    collected_at: Mapped[datetime] = mapped_column(
+        nullable=False, server_default=func.current_timestamp()
+    )

@@ -29,6 +29,8 @@ dependencies = [
 [project.scripts]
 backup_site = "cli.backup_site:main"
 backup_system = "cli.backup_system:main"
+cleanup_sites = "cli.cleanup_sites:main"
+collect_stats = "cli.collect_stats:main"
 create_site = "cli.create_site:main"
 link_domain = "cli.link_domain:main"
 list_sites = "cli.list_sites:main"
