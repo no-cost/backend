@@ -10,7 +10,6 @@ exclude_paths:
     - "app/public/.htaccess"
     - "app/public/web.config"
     - "app/config.common.php" # hardlinked as config.php after install
-    - "app/storage/logs" # symlinked to ../../logs/ per-tenant
 
 hardlink_paths:
     - "app/extend.php"
