@@ -32,7 +32,7 @@ ALLOWED_BRANDING_IMAGE_TYPES = {
 }
 
 
-def get_default_mediawiki_skins() -> list[str]:
+def get_default_mediawiki_skins() -> set[str]:
     skins_dir = (
         Path(VARS["paths"]["tenants"]["skeleton_root"])
         / "mediawiki"
@@ -41,7 +41,7 @@ def get_default_mediawiki_skins() -> list[str]:
         / "skins"
     )
 
-    skin_names: list[str] = []
+    skin_names = set[str]()
     for skin_path in skins_dir.iterdir():
         skin_json = skin_path / "skin.json"
         if not skin_json.is_file():
@@ -53,8 +53,8 @@ def get_default_mediawiki_skins() -> list[str]:
             logging.warning(f"failed to read {skin_json}: {e}")
             continue
 
-        for name in data.get("ValidSkinNames", {}).values():
-            skin_names.append(name.lower())
+        for skin_id in data.get("ValidSkinNames", {}):
+            skin_names.add(skin_id)
 
     return skin_names
 
