@@ -1,55 +1,19 @@
 import typing as t
-from pathlib import Path
 
 import fastapi as fa
 
 from api.v1.service_settings import require_site_type
 from database.models import Site
-from settings import VARS
 from site_manager import write_tenant_file
+from site_manager.mediawiki import (
+    ALLOWED_BRANDING_IMAGE_TYPES,
+    ALLOWED_DEFAULT_SKINS,
+    ALLOWED_LANGUAGES,
+    MAX_BRANDING_UPLOAD_SIZE,
+)
 from site_manager.tenant_config import load_config, update_config
 
 MEDIAWIKI = fa.APIRouter(prefix="/mediawiki", tags=["mediawiki"])
-
-
-def get_default_mediawiki_skins() -> list[str]:
-    mw_skins_glob = (
-        Path(VARS["paths"]["tenants"]["skeleton_root"])
-        / "mediawiki"
-        / "app"
-        / "public"
-        / "skins"
-        / "*"
-    )
-    return [path.stem.lower() for path in mw_skins_glob.glob(mw_skins_glob)]
-
-
-MAX_BRANDING_UPLOAD_SIZE = 3 * 1024 * 1024  # 3 MB
-ALLOWED_DEFAULT_SKINS = get_default_mediawiki_skins()
-ALLOWED_LANGUAGES = {
-    "en",
-    "de",
-    "fr",
-    "es",
-    "it",
-    "pt",
-    "nl",
-    "pl",
-    "ua",
-    "ja",
-    "zh",
-    "ko",
-    "ar",
-    "cs",
-    "sk",
-}
-ALLOWED_BRANDING_IMAGE_TYPES = {
-    "image/png": ".png",
-    "image/svg+xml": ".svg",
-    "image/x-icon": ".ico",
-    "image/vnd.microsoft.icon": ".ico",
-    "image/jpeg": ".jpg",
-}
 
 
 @MEDIAWIKI.get("/")
