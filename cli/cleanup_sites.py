@@ -74,9 +74,9 @@ async def _main():
     )
     parser.add_argument(
         "--dry-run",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Only show what would be removed (default: --dry-run)",
+        action="store_true",
+        default=False,
+        help="Only show what would be removed without actually deleting",
     )
     parser.add_argument(
         "-n",

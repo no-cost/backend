@@ -15,10 +15,10 @@ async def _main():
         help="Site tag, admin email, or hostname (omit to backup all active sites)",
     )
     parser.add_argument(
-        "--periodic",
+        "--no-periodic",
         action="store_true",
-        help="Use periodic (date-stamped) backup location instead of attic",
-        default=True,
+        help="Use attic backup location instead of periodic (date-stamped)",
+        default=False,
     )
     parser.add_argument(
         "--delete-older-than",
@@ -46,7 +46,7 @@ async def _main():
                 print(f"Backing up site: {site.tag}")
                 runner = do_backup(
                     site,
-                    periodic=args.periodic,
+                    periodic=not args.no_periodic,
                     delete_older_than_days=args.delete_older_than,
                 )
                 print(runner.stdout.read())

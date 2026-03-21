@@ -39,10 +39,10 @@ async def _main():
         help="Force provisioning even if site already exists",
     )
     parser.add_argument(
-        "--send-email",
+        "--no-send-email",
         action="store_true",
-        help="Send welcome email with password reset link to admin email",
-        default=True,
+        help="Do not send welcome email with password reset link to admin email",
+        default=False,
     )
 
     args = parser.parse_args()
@@ -79,7 +79,7 @@ async def _main():
 
             reset_token = create_reset_token(site.tag, site.admin_password)
             runner = provision_site(
-                site, reset_token, force=args.force, send_email=args.send_email
+                site, reset_token, force=args.force, send_email=not args.no_send_email
             )
             print(runner.stdout.read())
             print(runner.stderr.read())
