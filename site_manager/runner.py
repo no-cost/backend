@@ -4,6 +4,7 @@ Lower-level Ansible wrapper for tenant lifecycle management.
 
 from os import environ
 from pathlib import Path
+from tempfile import mkdtemp
 from typing import Any
 
 from ansible_runner import Runner, RunnerConfig
@@ -24,6 +25,7 @@ def run_playbook(
 
     rc = RunnerConfig(
         private_data_dir=str(ANSIBLE_ROOT),
+        artifact_dir=mkdtemp(prefix="ansible-artifacts-"),
         playbook=playbook_path,  # relative to project dir: ansible/project/
         extravars=all_vars,
         envvars=dict[str, str](environ),

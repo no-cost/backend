@@ -30,7 +30,8 @@ async def get_health_status() -> dict:
     disk_usage_percent = round(disk.used / disk.total * 100, 1)
 
     services = await check_services()
-    services_ok = all(s == "active" for s in services.values())
+    # "reloading" means the service is still running, just re-reading config
+    services_ok = all(s in ("active", "reloading") for s in services.values())
 
     if not services_ok:
         status = "services_down"
