@@ -41,6 +41,9 @@ def get_default_mediawiki_skins() -> set[str]:
         / "skins"
     )
 
+    if not skins_dir.exists():
+        return set[str]()
+
     skin_names = set[str]()
     for skin_path in skins_dir.iterdir():
         skin_json = skin_path / "skin.json"
