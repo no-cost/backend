@@ -15,6 +15,7 @@ from site_manager import provision_site
 from site_manager.custom_domains import write_nginx_maps
 from utils import is_tag_blacklisted, random_string, validate_tag
 from utils.auth import create_reset_token
+from utils.health import get_health_status
 from utils.ip import get_client_ip
 from utils.turnstile import verify_turnstile
 
@@ -54,6 +55,13 @@ async def signup(
     x_test_token: t.Annotated[str | None, fa.Header()] = None,
 ):
     """Create and install a new site. The site installation happens in the background after the response is sent."""
+
+    health = await get_health_status()
+    if health["status"] != "ok":
+        raise fa.HTTPException(
+            status_code=503,
+            detail=f"Registration unavailable: {health['status']}",
+        )
 
     if not x_test_token == VARS["integration_test_token"]:
         await verify_turnstile(request.turnstile_token)

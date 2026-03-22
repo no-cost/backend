@@ -12,6 +12,7 @@ from site_manager import provision_site
 from site_manager.custom_domains import write_nginx_maps
 from utils import random_string, validate_tag
 from utils.auth import create_reset_token
+from utils.health import get_health_status
 
 
 async def _main():
@@ -44,8 +45,21 @@ async def _main():
         help="Do not send welcome email with password reset link to admin email",
         default=False,
     )
+    parser.add_argument(
+        "--no-checks",
+        action="store_true",
+        help="Skip health checks before creating the site",
+        default=False,
+    )
 
     args = parser.parse_args()
+
+    if not args.no_checks:
+        health = await get_health_status()
+        if health["status"] != "ok":
+            sys.exit(
+                f"Error: health check failed ({health['status']})\nUse --no-checks to skip this check."
+            )
 
     try:
         args.tag = validate_tag(args.tag)
