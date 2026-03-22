@@ -92,4 +92,5 @@
             - "nginx"
         loop_control:
             loop_var: web_service
+        ignore_errors: true
         tags: [always]
