@@ -12,6 +12,7 @@ from ansible_runner import Runner, RunnerConfig
 from settings import VARS
 
 ANSIBLE_ROOT = Path(__file__).parent.parent / "ansible"
+ANSIBLE_TIMEOUT = int(environ.get("ANSIBLE_TIMEOUT", "900"))  # 15m
 
 
 def run_playbook(
@@ -19,6 +20,7 @@ def run_playbook(
     tags: str | None = None,
     quiet: bool = True,
     extravars: dict[str, Any] = {},
+    timeout: int | None = None,
 ) -> Runner:
     all_vars = VARS.copy()
     all_vars.update(extravars)
@@ -31,6 +33,7 @@ def run_playbook(
         envvars=dict[str, str](environ),
         tags=tags,
         quiet=quiet,
+        timeout=timeout or ANSIBLE_TIMEOUT,
     )
     rc.prepare()
 
