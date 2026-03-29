@@ -1,28 +1,121 @@
 #!/usr/bin/env python3
+"""
+{ zcat -f /srv/host/*/logs/access.* /var/log/nginx/* 2>/dev/null; } > access.log
+scp root@nocost-dev:~/access.log .
+python analyze.py
+"""
+
+import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
+import maxminddb
 import numpy as np
+import pandas as pd
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from analyze import load_logs, build_dataframe, _bar_labels, STATUS_COLORS, PAL, DPI
+SCRIPT_DIR = Path(__file__).parent
+LOG_INPUT = SCRIPT_DIR / "access.log"
+OUTPUT_DIR = SCRIPT_DIR / "report"
+MMDB_PATH = SCRIPT_DIR / "GeoLite2-City.mmdb"
+DPI = 150
 
-OUTPUT_DIR = Path(__file__).parent
+STATUS_COLORS = {
+    "1xx": "#64b5f6",
+    "2xx": "#81c784",
+    "3xx": "#fff176",
+    "4xx": "#ffb74d",
+    "5xx": "#e57373",
+}
+
 BETTERSTACK_UA = "Better Stack Better Uptime Bot"
 
+sns.set_theme(style="whitegrid", palette="muted", font_scale=0.9)
+PAL = sns.color_palette("Set2", 10)
+
+
+def load_logs() -> list[dict]:
+    records = []
+    with open(LOG_INPUT, errors="replace") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return records
+
+
+def _lookup_countries(ips: pd.Series) -> dict[str, str]:
+    """Resolve unique IPs to country names via MaxMind GeoLite2."""
+    if not MMDB_PATH.exists():
+        print(
+            f"  ⚠ GeoLite2 database not found at {MMDB_PATH}, skipping country lookup"
+        )
+        return {}
+
+    result = {}
+    with maxminddb.open_database(str(MMDB_PATH)) as reader:
+        for ip in ips.unique():
+            try:
+                record = reader.get(ip)
+                if record and "country" in record:
+                    result[ip] = record["country"]["names"]["en"]
+            except (ValueError, KeyError):
+                continue
+    return result
+
+
+def build_dataframe(records: list[dict]) -> pd.DataFrame:
+    df = pd.DataFrame(records)
+    df["timestamp"] = pd.to_datetime(df["time"], errors="coerce", utc=True)
+
+    for col in ("status", "body_bytes_sent", "request_time", "request_length"):
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+
+    df["status"] = df["status"].astype(int)
+    df["status_class"] = (
+        (df["status"] // 100)
+        .map({1: "1xx", 2: "2xx", 3: "3xx", 4: "4xx", 5: "5xx"})
+        .fillna("???")
+    )
+    df["path"] = df["request_uri"].str.split("?").str[0]
+    df["hour"] = df["timestamp"].dt.floor("h")
+    df["date"] = df["timestamp"].dt.date
+    df["weekday"] = df["timestamp"].dt.day_name()
+    df["hour_of_day"] = df["timestamp"].dt.hour
+
+    ip_to_country = _lookup_countries(df["remote_addr"])
+    df["country"] = df["remote_addr"].map(ip_to_country).fillna("Unknown")
+
+    return df.sort_values("timestamp").reset_index(drop=True)
+
+FIG_I = 1
 
 def _save(fig, name):
+    global FIG_I
+
     fig.savefig(
-        OUTPUT_DIR / f"{name}.png", dpi=DPI, bbox_inches="tight", facecolor="white"
+        OUTPUT_DIR / f"{FIG_I:02d}_{name}.png", dpi=DPI, bbox_inches="tight", facecolor="white"
     )
     plt.close(fig)
     print(f"  ✓ {name}.png")
+
+    if "no_betterstack" in name:
+        FIG_I += 1
+
+
+def _bar_labels(ax, values, fmt="{:,}", fontsize=7):
+    max_val = max(values) if len(values) else 0
+    for i, v in enumerate(values):
+        ax.text(v + max_val * 0.01, i, fmt.format(v), va="center", fontsize=fontsize)
 
 
 def plot_status_codes(df, suffix=""):
@@ -53,7 +146,7 @@ def plot_status_codes(df, suffix=""):
     _bar_labels(axes[1], top.values, fontsize=8)
 
     fig.tight_layout()
-    _save(fig, f"03_status_codes{suffix}")
+    _save(fig, f"status_codes{suffix}")
 
 
 def plot_response_times(df, suffix=""):
@@ -76,7 +169,7 @@ def plot_response_times(df, suffix=""):
     _bar_labels(axes[1], vals, fmt="{:.3f}s", fontsize=8)
 
     fig.tight_layout()
-    _save(fig, f"04_response_times{suffix}")
+    _save(fig, f"response_times{suffix}")
 
 
 def plot_top_paths(df, suffix=""):
@@ -95,7 +188,7 @@ def plot_top_paths(df, suffix=""):
     ax.tick_params(axis="y", labelsize=8)
     _bar_labels(ax, top.values)
     fig.tight_layout()
-    _save(fig, f"05_top_paths{suffix}")
+    _save(fig, f"top_paths{suffix}")
 
 
 def plot_user_agents(df, suffix=""):
@@ -115,7 +208,7 @@ def plot_user_agents(df, suffix=""):
     )
     ax.set(title="Rodiny klientských agentov", xlabel="Požiadavky", ylabel="")
     fig.tight_layout()
-    _save(fig, f"11_user_agents{suffix}")
+    _save(fig, f"user_agents{suffix}")
 
 
 def plot_top_countries(df, suffix=""):
@@ -133,11 +226,15 @@ def plot_top_countries(df, suffix=""):
         orient="h",
         legend=False,
     )
-    ax.set(title="15 najčastejších krajín podľa požiadaviek", xlabel="Požiadavky", ylabel="")
+    ax.set(
+        title="15 najčastejších krajín podľa požiadaviek",
+        xlabel="Požiadavky",
+        ylabel="",
+    )
     ax.tick_params(axis="y", labelsize=9)
     _bar_labels(ax, top.values)
     fig.tight_layout()
-    _save(fig, f"13_top_countries{suffix}")
+    _save(fig, f"top_countries{suffix}")
 
 
 PLOTS = [
@@ -152,7 +249,7 @@ PLOTS = [
 def main():
     records = load_logs()
     if not records:
-        print("No log entries found.")
+        print(f"No log entries found. Place logs in {LOG_INPUT}")
         sys.exit(1)
 
     print(f"Loaded {len(records):,} entries")
