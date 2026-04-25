@@ -9,7 +9,7 @@ import bcrypt
 import fastapi as fa
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.background import BackgroundTask
@@ -30,6 +30,7 @@ from utils.auth import (
     password_fingerprint,
     verify_password,
 )
+from utils import validate_password
 from utils.ip import get_client_ip
 from utils.mail import send_mail
 from utils.turnstile import verify_turnstile
@@ -140,6 +141,11 @@ class ResetPasswordBody(BaseModel):
     token: str
     password: str
 
+    @field_validator("password")
+    @classmethod
+    def password_must_be_strong(cls, v: str) -> str:
+        return validate_password(v)
+
 
 @V1_ACCOUNT.post("/reset-password")
 async def reset_password(
@@ -169,6 +175,11 @@ async def reset_password(
 class ChangePasswordBody(BaseModel):
     old_password: str
     new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def password_must_be_strong(cls, v: str) -> str:
+        return validate_password(v)
 
 
 @V1_ACCOUNT.post("/change-password")

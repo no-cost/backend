@@ -23,3 +23,11 @@ def validate_tag(tag: str) -> str:
 
 def is_tag_blacklisted(tag: str) -> bool:
     return tag in BLACKLISTED_TAGS or tag.startswith(INTTEST_TAG_PREFIX)
+
+
+def validate_password(password: str) -> str:
+    if len(password) < 8:
+        raise ValueError("Password must be at least 8 characters.")
+    if not any(c.isdigit() for c in password):
+        raise ValueError("Password must contain at least one number.")
+    return password
