@@ -4,7 +4,7 @@ from utils import validate_password
 
 
 def test_valid_password():
-    assert validate_password("jankomarienka!!") == "jankomarienka!!"
+    assert validate_password("jankomarienka1!") == "jankomarienka1!"
 
 
 def test_password_too_short():
