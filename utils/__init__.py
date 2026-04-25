@@ -18,7 +18,7 @@ def validate_tag(tag: str) -> str:
         raise ValueError("Tag must be at least 3 characters.")
     if not TAG_PATTERN.match(tag):
         raise ValueError("Tag must contain only letters, digits, and underscores.")
-    return tag
+    return tag.lower()
 
 
 def is_tag_blacklisted(tag: str) -> bool:

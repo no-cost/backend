@@ -35,6 +35,11 @@ def test_tag_invalid_characters():
             validate_tag(tag)
 
 
+def test_tag_normalized_to_lowercase():
+    assert validate_tag("MySite") == "mysite"
+    assert validate_tag("FOO_BAR") == "foo_bar"
+
+
 def test_tag_blacklisted():
     for tag in ["api", "www", "inttest_anything"]:
         assert is_tag_blacklisted(tag) is True
