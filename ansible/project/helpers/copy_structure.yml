@@ -11,7 +11,9 @@
       rsync_excludes: "{{
           (mount_paths | default([]) | map('regex_replace', '^', '--exclude=/') | list) +
           (exclude_paths | default([]) | map('regex_replace', '^', '--exclude=/') | list) +
-          (hardlink_paths | default([]) | map('regex_replace', '^', '--exclude=/') | list)
+          (hardlink_paths | default([]) | map('regex_replace', '^', '--exclude=/') | list) +
+          (renamed_hardlinks | default([]) | map(attribute='dest') |
+              map('regex_replace', '^', '--exclude=/') | list)
           }}"
   tags: [always]
 
@@ -25,23 +27,8 @@
   delegate_to: localhost
   tags: [always]
 
-- name: Build find exclude args for ownership
-  ansible.builtin.set_fact:
-      find_excludes: "{{
-          mount_paths | default([]) | map('regex_replace', '^(.*)$', '-path ' +
-          paths.tenants.root + '/' + tenant_tag + '/\\1 -prune -o') | join(' ')
-          }}"
-  when: mount_paths is defined and mount_paths | length > 0
-  tags: [always]
-
-- name: Set ownership for tenant dirs
-  ansible.builtin.shell:
-      cmd: |
-          find {{ (paths.tenants.root + "/" + tenant_tag + "/app") | quote }} \
-          {{ find_excludes | default('') }} \
-          -exec chown {{ ("tenant_" + tenant_tag + ":tenant_" + tenant_tag) | quote }} {} +
-      executable: /bin/bash
-  changed_when: true
+- name: Set ownership of private tenant app data
+  ansible.builtin.include_tasks: ./set_app_ownership.yml
   tags: [always]
 
 - name: Set ownership of root tenant dirs
@@ -55,19 +42,6 @@
       - "session"
   loop_control:
       loop_var: root_tenant_dir
-  tags: [always]
-
-- name: Ensure mount points for directories exist
-  ansible.builtin.file:
-      path: "{{ paths.tenants.root }}/{{ tenant_tag }}/{{ mount_dir_raw }}"
-      state: directory
-      owner: "tenant_{{ tenant_tag }}"
-      group: "tenant_{{ tenant_tag }}"
-      mode: "755"
-  loop: "{{ mount_paths | default([]) }}"
-  loop_control:
-      loop_var: mount_dir_raw
-  failed_when: false
   tags: [always]
 
 - name: Ensure fstab entries for bind mounts

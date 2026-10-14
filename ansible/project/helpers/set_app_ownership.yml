@@ -1,0 +1,23 @@
+---
+- name: Build ownership exclusions for shared app paths
+  ansible.builtin.set_fact:
+      find_excludes: "{{
+          ((mount_paths | default([])) +
+           (hardlink_paths | default([])) +
+           (renamed_hardlinks | default([]) | map(attribute='dest') | list))
+          | map('regex_replace', '^', paths.tenants.root + '/' + tenant_tag + '/')
+          | map('quote')
+          | map('regex_replace', '^(.*)$', '-path \\1 -prune -o') | join(' ')
+          }}"
+  tags: [always]
+
+- name: Set ownership of private tenant app files and directories
+  ansible.builtin.shell:
+      cmd: |
+          find {{ (paths.tenants.root + '/' + tenant_tag + '/app') | quote }} \
+          {{ find_excludes }} \
+          \( -type d -o -type f -links 1 \) \
+          -exec chown -h {{ ('tenant_' + tenant_tag + ':tenant_' + tenant_tag) | quote }} {} +
+      executable: /bin/bash
+  changed_when: true
+  tags: [always]

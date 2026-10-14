@@ -33,22 +33,29 @@
       _extracted_backup: "{{ _extracted_dirs.files[0].path }}"
   tags: ["attic", "periodic"]
 
+- name: Load shared file structure vars
+  ansible.builtin.include_vars:
+      file: "{{ playbook_dir }}/vars/{{ service_type }}_files.yml"
+  tags: ["attic", "periodic"]
+
 - name: Restore tenant files
   ansible.posix.synchronize:
       src: "{{ _extracted_backup }}/files/"
       dest: "{{ tenant_dir }}/"
       recursive: true
       links: true
+      # Archive metadata must not change existing shared files or bind mounts.
+      rsync_opts: "{{
+          ((mount_paths | default([])) +
+           (hardlink_paths | default([])) +
+           (renamed_hardlinks | default([]) | map(attribute='dest') | list))
+          | map('regex_replace', '^', '--exclude=/') | list
+          }}"
   delegate_to: localhost
   tags: ["attic", "periodic"]
 
-- name: Fix ownership of restored files
-  ansible.builtin.shell:
-      cmd: |
-          find {{ tenant_dir }}/app -not -type l \
-          -exec chown {{ (tenant_user + ':' + tenant_user) | quote }} {} +
-      executable: /bin/bash
-  changed_when: true
+- name: Set ownership of private restored app data
+  ansible.builtin.include_tasks: ../helpers/set_app_ownership.yml
   tags: ["attic", "periodic"]
 
 - name: Import tenant database

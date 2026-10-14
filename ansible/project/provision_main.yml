@@ -66,8 +66,9 @@
         ansible.builtin.file:
             path: "{{ paths.tenants.root }}/{{ tenant_tag }}/usr/lib"
             state: directory
-            owner: "tenant_{{ tenant_tag }}"
-            group: "tenant_{{ tenant_tag }}"
+            owner: root
+            group: root
+            mode: "0755"
         tags: [always]
 
       - name: Hardlink skeleton libs into tenant
