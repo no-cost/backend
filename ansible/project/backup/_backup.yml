@@ -1,44 +1,12 @@
 ---
-# Backup tenant-specific (non-shared) data
+# Backup tenant-specific (non-shared) data into <backup_dir>.tar.gz
+# Runs with the CPU/IO priority of the caller (`backup_site` lowers it to nice 19 + idle IO class).
 # Params:
 #   - tenant_dir
-#   - tenant_user
 #   - tenant_db
 #   - backup_dir
-#   - additional_excludes
+#   - include_private (default true): also back up etc/config.json (credentials) and logs
 #   - include_readme (default false)
-
-- name: Find bind mounts for tenant
-  ansible.builtin.shell:
-      cmd: mount | grep "{{ tenant_dir }}" | awk '{print $3}'
-  register: _tenant_mounts
-  changed_when: false
-  failed_when: false
-  tags: ["backup", "periodic"]
-
-- name: Find hardlinked files in tenant public dir
-  ansible.builtin.shell:
-      cmd: find {{ tenant_dir }}/app/public -type f -links +1 -printf '%P\n'
-  register: _hardlinked_files
-  changed_when: false
-  failed_when: false
-  tags: ["backup", "periodic"]
-
-- name: Backup app/public, etc/config.json, logs; exclude shared resources & additional files
-  ansible.builtin.set_fact:
-      _backup_rsync_excludes: "{{
-          (_tenant_mounts.stdout_lines | default([])
-              | map('regex_replace', '^' + tenant_dir + '/', '--exclude=/') | list) +
-          (_hardlinked_files.stdout_lines | default([])
-              | map('regex_replace', '^', '--exclude=/app/public/') | list) +
-          (additional_excludes | default([])
-              | map('regex_replace', '^', '--exclude=') | list) +
-          ['--include=/app/', '--include=/app/public/', '--include=/app/public/**',
-           '--include=/etc/', '--include=/etc/config.json',
-           '--include=/logs/', '--include=/logs/**',
-           '--exclude=*']
-      }}"
-  tags: ["backup", "periodic"]
 
 - name: Create backup directory
   ansible.builtin.file:
@@ -47,21 +15,14 @@
       mode: "0700"
   tags: ["backup", "periodic"]
 
-- name: Backup tenant directory
-  ansible.posix.synchronize:
-      src: "{{ tenant_dir }}/"
-      dest: "{{ backup_dir }}/files/"
-      recursive: true
-      links: true
-      rsync_opts: "{{ _backup_rsync_excludes }}"
-  delegate_to: localhost
-  tags: ["backup", "periodic"]
-
+# consistent InnoDB snapshot, without locking the site's tables while dumping
 - name: Dump tenant database
   community.mysql.mysql_db:
       name: "{{ tenant_db }}"
       state: dump
       target: "{{ backup_dir }}/database.sql"
+      single_transaction: true
+      quick: true
       login_unix_socket: /var/run/mysqld/mysqld.sock
   tags: ["backup", "periodic"]
 
@@ -73,11 +34,16 @@
   when: include_readme | default(false) | bool
   tags: ["backup", "periodic"]
 
-- name: Compress backup
-  community.general.archive:
-      path: "{{ backup_dir }}"
-      dest: "{{ backup_dir }}.tar.gz"
-      format: gz
+# streams the tenant's files + the dump into the archive, no intermediate copy of the files
+- name: Archive tenant files and database
+  ansible.builtin.command:
+      argv:
+          - /bin/bash
+          - "{{ playbook_dir }}/files/backup_tenant.sh"
+          - "{{ tenant_dir }}"
+          - "{{ backup_dir }}"
+          - "{{ '1' if include_private | default(true) | bool else '0' }}"
+  changed_when: true
   tags: ["backup", "periodic"]
 
 - name: Remove uncompressed backup directory

@@ -8,6 +8,8 @@
 #   - tenant_hostname: string (required when send_email is true)
 #   - removal_reason: string (optional, included in removal email)
 #   - backup_dir_override: string (optional, overrides default backup dir)
+#   - include_private: boolean (default true) — include etc/config.json and logs (false for user exports)
+#   - include_readme: boolean (default false) — add the export README
 
 - name: Backup (and optionally remove) tenant
   hosts: localhost

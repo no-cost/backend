@@ -37,13 +37,6 @@ from utils.turnstile import verify_turnstile
 
 V1_ACCOUNT = fa.APIRouter(prefix="/account", tags=["account"])
 
-EXPORT_EXCLUDES: dict[str, list[str]] = {
-    "flarum": ["/etc", "/etc/config.json", "/logs", "/logs/**"],
-    "mediawiki": ["/etc", "/etc/config.json", "/logs", "/logs/**"],
-    "wordpress": ["/etc", "/etc/config.json", "/logs", "/logs/**"],
-}
-
-
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
@@ -291,8 +284,6 @@ async def export_data(
 
     site = await _resolve_export_site(db, token, request)
 
-    excludes = EXPORT_EXCLUDES.get(site.site_type, [])
-
     tmp_dir = tempfile.mkdtemp(prefix="nocost_export_")
     backup_dir = str(Path(tmp_dir) / site.tag)
     archive_path = f"{backup_dir}.tar.gz"
@@ -301,7 +292,7 @@ async def export_data(
         await asyncio.to_thread(
             backup_site,
             site,
-            additional_excludes=excludes,
+            include_private=False,  # no database credentials, no server logs
             backup_dir=backup_dir,
             include_readme=True,
         )

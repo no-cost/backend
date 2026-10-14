@@ -2,6 +2,7 @@ import argparse
 import sys
 
 from site_manager.runner import backup_system as do_backup
+from utils.priority import lower_priority
 
 
 def main():
@@ -16,6 +17,8 @@ def main():
     )
 
     args = parser.parse_args()
+
+    lower_priority()
 
     try:
         print("Backing up system directories...")

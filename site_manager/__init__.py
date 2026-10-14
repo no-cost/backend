@@ -83,7 +83,7 @@ def backup_site(
     site: Site,
     periodic: bool = False,
     delete_older_than_days: int = 7,
-    additional_excludes: list[str] = [],
+    include_private: bool = True,
     backup_dir: str | None = None,
     include_readme: bool = False,
 ):
@@ -92,7 +92,7 @@ def backup_site(
         service_type=site.site_type,
         periodic=periodic,
         delete_older_than_days=delete_older_than_days,
-        additional_excludes=additional_excludes,
+        include_private=include_private,
         backup_dir=backup_dir,
         include_readme=include_readme,
     )
