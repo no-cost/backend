@@ -2,8 +2,10 @@
 Lower-level Ansible wrapper for tenant lifecycle management.
 """
 
+from dataclasses import dataclass
 from os import environ
 from pathlib import Path
+from shutil import rmtree
 from tempfile import mkdtemp
 from typing import Any
 
@@ -15,36 +17,60 @@ ANSIBLE_ROOT = Path(__file__).parent.parent / "ansible"
 ANSIBLE_TIMEOUT = int(environ.get("ANSIBLE_TIMEOUT", "900"))  # 15m
 
 
+@dataclass(frozen=True)
+class PlaybookResult:
+    """Outcome of a playbook run, read into memory because the run's artifact directory is removed afterwards."""
+
+    status: str
+    rc: int | None
+    stdout: str
+    stderr: str
+
+
 def run_playbook(
     playbook_path: str,
     tags: str | None = None,
     quiet: bool = True,
     extravars: dict[str, Any] = {},
     timeout: int | None = None,
-) -> Runner:
+) -> PlaybookResult:
     all_vars = VARS.copy()
     all_vars.update(extravars)
 
-    rc = RunnerConfig(
-        private_data_dir=str(ANSIBLE_ROOT),
-        artifact_dir=mkdtemp(prefix="ansible-artifacts-"),
-        playbook=playbook_path,  # relative to project dir: ansible/project/
-        extravars=all_vars,
-        envvars=dict[str, str](environ),
-        tags=tags,
-        quiet=quiet,
-        timeout=timeout or ANSIBLE_TIMEOUT,
-    )
-    rc.prepare()
-
-    runner = Runner(config=rc)
-    runner.run()
-    if runner.status != "successful":
-        raise RuntimeError(
-            f"Playbook {playbook_path} failed with status: {runner.status}. rc: {runner.rc}, stats: {runner.stats}.\n\nstdout: {runner.stdout.read()}\nstderr: {runner.stderr.read()}"
+    # /tmp is a tmpfs (RAM), every run's artifacts (output, events, the command line with all vars) are removed
+    artifact_dir = mkdtemp(prefix="ansible-artifacts-")
+    try:
+        rc = RunnerConfig(
+            private_data_dir=str(ANSIBLE_ROOT),
+            artifact_dir=artifact_dir,
+            playbook=playbook_path,  # relative to project dir: ansible/project/
+            extravars=all_vars,
+            envvars=dict[str, str](environ),
+            tags=tags,
+            quiet=quiet,
+            timeout=timeout or ANSIBLE_TIMEOUT,
         )
+        rc.prepare()
 
-    return runner
+        runner = Runner(config=rc)
+        runner.run()
+
+        with runner.stdout as stdout, runner.stderr as stderr:
+            result = PlaybookResult(
+                status=runner.status,
+                rc=runner.rc,
+                stdout=stdout.read(),
+                stderr=stderr.read(),
+            )
+
+        if result.status != "successful":
+            raise RuntimeError(
+                f"Playbook {playbook_path} failed with status: {result.status}. rc: {result.rc}, stats: {runner.stats}.\n\nstdout: {result.stdout}\nstderr: {result.stderr}"
+            )
+    finally:
+        rmtree(artifact_dir, ignore_errors=True)
+
+    return result
 
 
 def provision_tenant(
@@ -55,7 +81,7 @@ def provision_tenant(
     reset_token: str,
     force: bool = False,
     send_email: bool = True,
-) -> Runner:
+) -> PlaybookResult:
     """Provision a new tenant using Ansible."""
 
     return run_playbook(
@@ -80,7 +106,7 @@ def remove_tenant(
     admin_email: str | None = None,
     hostname: str | None = None,
     reason: str | None = None,
-) -> Runner:
+) -> PlaybookResult:
     """Remove a tenant using Ansible."""
 
     return run_playbook(
@@ -105,7 +131,7 @@ def backup_tenant(
     include_private: bool = True,
     backup_dir: str | None = None,
     include_readme: bool = False,
-) -> Runner:
+) -> PlaybookResult:
     """Backup a tenant using Ansible, `include_private` adds etc/config.json (credentials) and logs."""
 
     extravars: dict[str, Any] = {
@@ -131,7 +157,7 @@ def restore_tenant(
     service_type: str,
     backup_mode: str = "attic",
     backup_date: str | None = None,
-) -> Runner:
+) -> PlaybookResult:
     """Restore a tenant from backup."""
 
     extravars: dict[str, Any] = {
@@ -151,7 +177,7 @@ def restore_tenant(
 def sync_tenant_files(
     tenant_tag: str,
     service_type: str,
-) -> Runner:
+) -> PlaybookResult:
     return run_playbook(
         "sync_files_main.yml",
         extravars={
@@ -163,7 +189,7 @@ def sync_tenant_files(
 
 def backup_system(
     delete_older_than_days: int = 7,
-) -> Runner:
+) -> PlaybookResult:
     return run_playbook(
         "backup_system_main.yml",
         extravars={

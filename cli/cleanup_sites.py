@@ -151,13 +151,13 @@ async def _main():
             for site, reason in flagged:
                 try:
                     print(f"\nremoving {site.tag} ({reason})...")
-                    runner = do_remove(
+                    result = do_remove(
                         site,
                         send_email=not args.no_send_email,
                         reason=f"auto-cleanup: {reason}",
                     )
-                    print(runner.stdout.read())
-                    print(runner.stderr.read())
+                    print(result.stdout)
+                    print(result.stderr)
 
                     site.removed_at = datetime.now()
                     site.removal_reason = f"auto-cleanup: {reason}"

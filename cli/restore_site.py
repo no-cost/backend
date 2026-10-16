@@ -34,13 +34,13 @@ async def _main():
             if site is None:
                 sys.exit(f"Error: active site '{args.identifier}' not found")
 
-        runner = do_restore(
+        result = do_restore(
             site,
             backup_mode=args.backup_mode,
             backup_date=args.date,
         )
-        print(runner.stdout.read())
-        print(runner.stderr.read())
+        print(result.stdout)
+        print(result.stderr)
         print(f"Site restored: {site.tag}")
     finally:
         await engine.dispose()

@@ -92,11 +92,11 @@ async def _main():
             await db.commit()
 
             reset_token = create_reset_token(site.tag, site.admin_password)
-            runner = provision_site(
+            result = provision_site(
                 site, reset_token, force=args.force, send_email=not args.no_send_email
             )
-            print(runner.stdout.read())
-            print(runner.stderr.read())
+            print(result.stdout)
+            print(result.stderr)
 
             site.installed_at = datetime.now()
             await db.commit()

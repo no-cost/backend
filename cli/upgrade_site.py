@@ -37,8 +37,8 @@ async def _main():
                 print(f"Upgrading {site.tag} ({site.site_type})...")
                 result = await upgrade_site(site, sync_files=args.sync_files)
                 if result is not None:
-                    print(result.stdout.read())
-                    print(result.stderr.read())
+                    print(result.stdout)
+                    print(result.stderr)
                 print(f"ok {site.tag}")
     finally:
         await engine.dispose()

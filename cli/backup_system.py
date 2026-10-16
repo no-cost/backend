@@ -22,9 +22,9 @@ def main():
 
     try:
         print("Backing up system directories...")
-        runner = do_backup(delete_older_than_days=args.delete_older_than)
-        print(runner.stdout.read())
-        print(runner.stderr.read())
+        result = do_backup(delete_older_than_days=args.delete_older_than)
+        print(result.stdout)
+        print(result.stderr)
         print("System backup completed")
     except RuntimeError as e:
         sys.exit(f"System backup failed: {e}")
