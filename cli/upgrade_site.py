@@ -4,6 +4,7 @@ import asyncio
 from database.models import Site
 from database.session import async_session_factory, engine
 from site_manager import upgrade_site
+from utils.sentry import init_sentry
 
 
 async def _main():
@@ -45,6 +46,7 @@ async def _main():
 
 
 def main():
+    init_sentry("upgrade_site")
     asyncio.run(_main())
 
 

@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import dns.resolver
@@ -13,6 +14,8 @@ NGINX_MAP_PATH = Path("/etc/nginx/maps/sites.conf")
 CUSTOM_SERVER_NAMES_PATH = Path("/etc/nginx/snippets/custom-server-names.conf")
 CERTBOT_WEBROOT = Path("/var/lib/letsencrypt")
 CNAME_TARGET = f"cname.{VARS['main_domain']}"
+
+logger = logging.getLogger(__name__)
 
 
 def check_cname(custom_domain: str) -> bool:
@@ -57,15 +60,29 @@ async def link_custom_domain(db: AsyncSession, site: Site, custom_domain: str) -
             f"CNAME record for '{custom_domain}' must point to '{CNAME_TARGET}'"
         )
 
+    old_hostname = site.hostname
+    context = {"tenant_tag": site.tag, "hostname": custom_domain, "old_hostname": old_hostname}
+
     # obtain TLS certificate before switching hostname, so a failure
     # leaves the site on its old (working) domain
-    await _obtain_certificate(custom_domain)
+    try:
+        await _obtain_certificate(custom_domain)
+    except Exception:
+        logger.exception(
+            "obtaining a certificate for %s (%s) failed", custom_domain, site.tag, extra=context
+        )
+        raise
 
-    old_hostname = site.hostname
-    site.hostname = custom_domain
-    await db.commit()
-    await write_nginx_maps(db)
-    await rewrite_urls(site, old_hostname)
+    try:
+        site.hostname = custom_domain
+        await db.commit()
+        await write_nginx_maps(db)
+        await rewrite_urls(site, old_hostname)
+    except Exception:
+        logger.exception("linking %s to %s failed", custom_domain, site.tag, extra=context)
+        raise
+
+    logger.info("linked %s to %s", custom_domain, site.tag, extra=context)
 
 
 async def unlink_custom_domain(
@@ -76,11 +93,20 @@ async def unlink_custom_domain(
     """
 
     old_hostname = site.hostname
-    site.hostname = restore_canonical
-    await db.commit()
-    await write_nginx_maps(db)
-    await _delete_certificate(old_hostname)
-    await rewrite_urls(site, old_hostname)
+    context = {"tenant_tag": site.tag, "hostname": restore_canonical, "old_hostname": old_hostname}
+    try:
+        site.hostname = restore_canonical
+        await db.commit()
+        await write_nginx_maps(db)
+        await _delete_certificate(old_hostname)
+        await rewrite_urls(site, old_hostname)
+    except Exception:
+        logger.exception(
+            "unlinking %s from %s failed", old_hostname, site.tag, extra=context
+        )
+        raise
+
+    logger.info("unlinked %s from %s", old_hostname, site.tag, extra=context)
 
 
 async def write_nginx_maps(db: AsyncSession) -> None:

@@ -1,7 +1,10 @@
+import logging
 import smtplib
 from email.message import EmailMessage
 
 from settings import VARS
+
+logger = logging.getLogger(__name__)
 
 
 def send_mail(to: str, subject: str, body: str) -> None:
@@ -11,8 +14,15 @@ def send_mail(to: str, subject: str, body: str) -> None:
     msg["Subject"] = subject
     msg.set_content(body)
 
-    with smtplib.SMTP("127.0.0.1", 25) as smtp:
-        smtp.send_message(msg)
+    context = {"email": to, "mail_subject": subject}
+    try:
+        with smtplib.SMTP("127.0.0.1", 25) as smtp:
+            smtp.send_message(msg)
+    except OSError:  # includes smtplib.SMTPException
+        logger.exception("sending e-mail '%s' to %s failed", subject, to, extra=context)
+        raise
+
+    logger.info("sent e-mail '%s' to %s", subject, to, extra=context)
 
 
 def send_donor_thank_you(

@@ -8,6 +8,7 @@ from database.models import Site
 from database.session import async_session_factory, engine
 from utils.backup import get_attic_backup_path, get_latest_host_backup
 from utils.ip import get_country_code
+from utils.sentry import init_sentry
 
 
 async def _main():
@@ -177,6 +178,7 @@ def _print_table(headers: list[str], rows: list[list[str]]):
 
 
 def main():
+    init_sentry("list_sites")
     asyncio.run(_main())
 
 

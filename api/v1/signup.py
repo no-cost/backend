@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import typing as t
 from datetime import datetime
 
@@ -18,6 +19,8 @@ from utils.auth import create_reset_token
 from utils.health import get_health_status
 from utils.ip import get_client_ip
 from utils.turnstile import verify_turnstile
+
+logger = logging.getLogger(__name__)
 
 V1_SIGNUP = fa.APIRouter(prefix="/signup", tags=["signup"])
 
@@ -122,11 +125,19 @@ async def _provision_and_finalize(site_tag: str, reset_token: str):
     async with async_session_factory() as db:
         site = await db.get(Site, site_tag)
 
-    # runs outside the session so we don't hold a DB connection during provisioning
-    await asyncio.to_thread(provision_site, site, reset_token)
+    context = {"tenant_tag": site.tag, "hostname": site.hostname, "email": site.admin_email}
+    try:
+        # runs outside the session so we don't hold a DB connection during provisioning
+        await asyncio.to_thread(provision_site, site, reset_token)
 
-    async with async_session_factory() as db:
-        site = await db.get(Site, site_tag)
-        site.installed_at = datetime.now()
-        await db.commit()
-        await write_nginx_maps(db)
+        async with async_session_factory() as db:
+            site = await db.get(Site, site_tag)
+            site.installed_at = datetime.now()
+            await db.commit()
+            await write_nginx_maps(db)
+    except Exception:
+        # a failed playbook is already reported with its output, this covers everything else
+        logger.exception("installing site %s (%s) failed", site_tag, context["email"], extra=context)
+        raise
+
+    logger.info("site %s installed", site_tag, extra=context)

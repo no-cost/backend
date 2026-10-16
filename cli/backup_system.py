@@ -3,9 +3,11 @@ import sys
 
 from site_manager.runner import backup_system as do_backup
 from utils.priority import lower_priority
+from utils.sentry import init_sentry
 
 
 def main():
+    init_sentry("backup_system")
     parser = argparse.ArgumentParser(
         description="Backup system directories (/etc, /root)"
     )

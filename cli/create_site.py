@@ -13,6 +13,7 @@ from site_manager.custom_domains import write_nginx_maps
 from utils import random_string, validate_tag
 from utils.auth import create_reset_token
 from utils.health import get_health_status
+from utils.sentry import init_sentry
 
 
 async def _main():
@@ -111,6 +112,7 @@ async def _main():
 
 
 def main():
+    init_sentry("create_site")
     asyncio.run(_main())
 
 

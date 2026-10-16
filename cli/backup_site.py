@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import logging
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -8,6 +9,9 @@ from database.models import Site
 from database.session import async_session_factory, engine
 from site_manager import backup_site as do_backup
 from utils.priority import lower_priority
+from utils.sentry import init_sentry
+
+logger = logging.getLogger(__name__)
 
 
 def _backup(site: Site, periodic: bool, delete_older_than_days: int) -> float:
@@ -73,9 +77,11 @@ async def _main():
             site = futures[future]
             try:
                 print(f"Site backed up: {site.tag} ({future.result():.1f}s)", flush=True)
-            except RuntimeError as e:
+            except RuntimeError:
                 failed += 1
-                print(f"Failed to backup {site.tag}: {e}", file=sys.stderr, flush=True)
+                logger.exception(
+                    "Failed to backup %s", site.tag, extra={"tenant_tag": site.tag}
+                )
 
     print(f"Backed up {len(sites) - failed} of {len(sites)} sites, {failed} failed")
     if failed:
@@ -83,6 +89,7 @@ async def _main():
 
 
 def main():
+    init_sentry("backup_site")
     asyncio.run(_main())
 
 

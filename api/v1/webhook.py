@@ -4,7 +4,7 @@ import re
 import typing as t
 
 import fastapi as fa
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Site
@@ -44,10 +44,27 @@ async def kofi_webhook(
 ):
     try:
         payload = KofiData(**json.loads(data))
-    except (json.JSONDecodeError, Exception):
+    except (json.JSONDecodeError, Exception) as e:
+        logger.error("Ko-fi webhook: invalid payload (%s)", _describe_invalid_payload(e))
         raise fa.HTTPException(status_code=400, detail="Invalid payload")
 
+    donation = {
+        "kofi_transaction_id": payload.kofi_transaction_id,
+        "kofi_type": payload.type,
+        "from_name": payload.from_name,
+        "email": payload.email,
+        "amount": payload.amount,
+        "currency": payload.currency,
+        "donor_message": payload.message or "",
+    }
+
     if payload.verification_token != VARS["kofi_verification_token"]:
+        logger.error(
+            "Ko-fi webhook: invalid verification token (transaction %s from %s)",
+            payload.kofi_transaction_id,
+            payload.email,
+            extra=donation,
+        )
         raise fa.HTTPException(status_code=403, detail="Invalid verification token")
 
     amount = float(payload.amount)
@@ -66,6 +83,14 @@ async def kofi_webhook(
         site = await Site.get_by_identifier(db, payload.email)
 
     if site is None:
+        logger.error(
+            "Ko-fi webhook: donation of %s %s from '%s' (%s) doesn't match an active site",
+            payload.amount,
+            payload.currency,
+            payload.from_name,
+            payload.email,
+            extra=donation,
+        )
         send_mail(
             to=VARS["info_mail"],
             subject="Ko-fi webhook: donor not found",
@@ -92,4 +117,23 @@ async def kofi_webhook(
         has_perks=site.has_donor_perks(),
     )
 
+    logger.info(
+        "Ko-fi webhook: donation of %s %s credited to %s (total %.2f)",
+        payload.amount,
+        payload.currency,
+        site.tag,
+        site.donated_amount,
+        extra={**donation, "tenant_tag": site.tag},
+    )
     return {"status": "ok"}
+
+
+def _describe_invalid_payload(error: Exception) -> str:
+    """What's wrong with a payload, without its values (it contains the verification token)."""
+
+    if isinstance(error, ValidationError):
+        return "; ".join(
+            f"{'.'.join(map(str, err['loc']))}: {err['type']}" for err in error.errors()
+        )
+    # JSON decoding (position only) or not a JSON object
+    return f"{type(error).__name__}: {error}"

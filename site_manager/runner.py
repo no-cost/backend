@@ -2,6 +2,9 @@
 Lower-level Ansible wrapper for tenant lifecycle management.
 """
 
+import logging
+import re
+import time
 from dataclasses import dataclass
 from os import environ
 from pathlib import Path
@@ -9,12 +12,18 @@ from shutil import rmtree
 from tempfile import mkdtemp
 from typing import Any
 
+import sentry_sdk
 from ansible_runner import Runner, RunnerConfig
 
 from settings import VARS
 
 ANSIBLE_ROOT = Path(__file__).parent.parent / "ansible"
 ANSIBLE_TIMEOUT = int(environ.get("ANSIBLE_TIMEOUT", "900"))  # 15m
+
+# values of these vars are cut out of the failure message and the output reported to Sentry
+SECRET_VAR_PATTERN = re.compile(r"secret|token|password|key|database_url")
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -27,6 +36,10 @@ class PlaybookResult:
     stderr: str
 
 
+class PlaybookError(RuntimeError):
+    """A playbook run that didn't succeed, already reported to Sentry with its output."""
+
+
 def run_playbook(
     playbook_path: str,
     tags: str | None = None,
@@ -36,6 +49,11 @@ def run_playbook(
 ) -> PlaybookResult:
     all_vars = VARS.copy()
     all_vars.update(extravars)
+
+    target = extravars.get("tenant_tag") or "system"
+    log_extra = {"playbook": playbook_path, "tenant_tag": extravars.get("tenant_tag", "")}
+    logger.info("running %s (tags: %s) for %s", playbook_path, tags, target, extra=log_extra)
+    started = time.monotonic()
 
     # /tmp is a tmpfs (RAM), every run's artifacts (output, events, the command line with all vars) are removed
     artifact_dir = mkdtemp(prefix="ansible-artifacts-")
@@ -64,13 +82,81 @@ def run_playbook(
             )
 
         if result.status != "successful":
-            raise RuntimeError(
-                f"Playbook {playbook_path} failed with status: {result.status}. rc: {result.rc}, stats: {runner.stats}.\n\nstdout: {result.stdout}\nstderr: {result.stderr}"
+            stats = runner.stats
+            error = PlaybookError(
+                _redact(
+                    f"Playbook {playbook_path} failed with status: {result.status}. rc: {result.rc}, stats: {stats}.\n\nstdout: {result.stdout}\nstderr: {result.stderr}",
+                    all_vars,
+                )
             )
+            _report_failure(error, playbook_path, tags, extravars, all_vars, result, stats)
+            raise error
     finally:
         rmtree(artifact_dir, ignore_errors=True)
 
+    logger.info(
+        "%s for %s finished in %.1fs", playbook_path, target, time.monotonic() - started, extra=log_extra
+    )
     return result
+
+
+def _report_failure(
+    error: PlaybookError,
+    playbook_path: str,
+    tags: str | None,
+    extravars: dict[str, Any],
+    all_vars: dict[str, Any],
+    result: PlaybookResult,
+    stats: dict | None,
+) -> None:
+    """Report a failed run to Sentry with the full ansible output attached."""
+
+    tenant_tag = extravars.get("tenant_tag")
+    output = _redact(f"{result.stdout}\n\nstderr:\n{result.stderr}", all_vars)
+
+    # a scope of its own, so the attachment doesn't end up in later events
+    with sentry_sdk.new_scope() as scope:
+        scope.set_tag("playbook", playbook_path)
+        scope.set_tag("ansible_status", result.status)
+        if tenant_tag:
+            scope.set_tag("tenant_tag", tenant_tag)
+        if extravars.get("tenant_hostname"):
+            scope.set_tag("hostname", extravars["tenant_hostname"])
+        scope.set_context(
+            "ansible",
+            {
+                "playbook": playbook_path,
+                "tags": tags,
+                "status": result.status,
+                "rc": result.rc,
+                "stats": stats,
+                "vars": {k: v for k, v in extravars.items() if not SECRET_VAR_PATTERN.search(k)},
+            },
+        )
+        # the message contains the output, group by playbook instead
+        scope.fingerprint = ["ansible-playbook-failed", playbook_path, tags or ""]
+        scope.add_attachment(
+            bytes=output.encode(),
+            filename=f"ansible-{tenant_tag or Path(playbook_path).stem}.log",
+            content_type="text/plain",
+        )
+        sentry_sdk.capture_exception(error)
+
+    logger.warning(
+        "%s for %s failed with status %s, rc %s",
+        playbook_path,
+        tenant_tag or "system",
+        result.status,
+        result.rc,
+        extra={"playbook": playbook_path, "tenant_tag": tenant_tag or ""},
+    )
+
+
+def _redact(text: str, all_vars: dict[str, Any]) -> str:
+    for name, value in all_vars.items():
+        if isinstance(value, str) and value and SECRET_VAR_PATTERN.search(name):
+            text = text.replace(value, f"[{name}]")
+    return text
 
 
 def provision_tenant(

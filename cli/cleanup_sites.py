@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import logging
 import sys
 from datetime import datetime, timedelta
 
@@ -9,6 +10,9 @@ from database.models import Site, SiteStats
 from database.session import async_session_factory, engine
 from site_manager import remove_site as do_remove
 from site_manager.custom_domains import write_nginx_maps
+from utils.sentry import init_sentry
+
+logger = logging.getLogger(__name__)
 
 MIN_AGE_DAYS = 60
 
@@ -164,8 +168,13 @@ async def _main():
                     await db.commit()
 
                     print(f"removed {site.tag}")
-                except Exception as e:
-                    print(f"failed to remove {site.tag}: {e}", file=sys.stderr)
+                except Exception:
+                    logger.exception(
+                        "failed to remove %s (%s)",
+                        site.tag,
+                        reason,
+                        extra={"tenant_tag": site.tag, "hostname": site.hostname},
+                    )
 
             await write_nginx_maps(db)
     finally:
@@ -186,6 +195,7 @@ def _print_table(headers: list[str], rows: list[list[str]]):
 
 
 def main():
+    init_sentry("cleanup_sites")
     asyncio.run(_main())
 
 

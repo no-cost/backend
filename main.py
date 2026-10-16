@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.v1 import V1
 from settings import VARS
+from utils.sentry import init_sentry
+
+init_sentry("api")
 
 API = FastAPI(title="no-cost API", description="API for no-cost.site")
 

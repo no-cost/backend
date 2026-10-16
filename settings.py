@@ -29,6 +29,9 @@ VARS = {
     "kofi_verification_token": environ["KOFI_VERIFICATION_TOKEN"],
     "health_check_token": environ["HEALTH_CHECK_TOKEN"],
     "integration_test_token": environ.get("INTEGRATION_TEST_TOKEN", ""),
+    # Sentry error and log reporting (utils/sentry.py), disabled when empty
+    "sentry_dsn": environ.get("SENTRY_DSN", ""),
+    "sentry_environment": environ.get("ENVIRONMENT", "production"),
 }
 
 BLACKLISTED_TAGS = ["api", "www", "mail", "cname", "status", "support"]

@@ -5,6 +5,7 @@ import sys
 from database.models import Site
 from database.session import async_session_factory, engine
 from utils.ip import get_country_code
+from utils.sentry import init_sentry
 
 
 async def _main():
@@ -55,6 +56,7 @@ async def _main():
 
 
 def main():
+    init_sentry("site_info")
     asyncio.run(_main())
 
 

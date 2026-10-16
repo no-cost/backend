@@ -19,6 +19,7 @@ dependencies = [
     "ansible-runner",
     "python-dotenv",
     "geoip2",
+    "sentry-sdk[fastapi]>=2.35",
 
     # for unit tests after deployment
     "aiosqlite",

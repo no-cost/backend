@@ -2,6 +2,7 @@ import asyncio
 
 from database.session import async_session_factory, engine
 from site_manager.custom_domains import write_nginx_maps
+from utils.sentry import init_sentry
 
 
 async def _main():
@@ -14,6 +15,7 @@ async def _main():
 
 
 def main():
+    init_sentry("sync_nginx_maps")
     asyncio.run(_main())
 
 

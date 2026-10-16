@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -8,6 +9,9 @@ import aiomysql
 from database.models import Site, SiteStats
 from database.session import async_session_factory, engine
 from settings import VARS
+from utils.sentry import init_sentry
+
+logger = logging.getLogger(__name__)
 
 TENANTS_ROOT = Path(VARS["paths"]["tenants"]["root"])
 
@@ -95,9 +99,11 @@ async def _main():
                     print(
                         f"{site.tag}: content={content_count} users={user_count} assets={assets_mb} MB"
                     )
-                except Exception as e:
+                except Exception:
                     errors += 1
-                    print(f"error {site.tag}: {e}", file=sys.stderr)
+                    logger.exception(
+                        "collecting stats of %s failed", site.tag, extra={"tenant_tag": site.tag}
+                    )
 
             await db.commit()
     finally:
@@ -107,6 +113,7 @@ async def _main():
 
 
 def main():
+    init_sentry("collect_stats")
     asyncio.run(_main())
 
 

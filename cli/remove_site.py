@@ -7,6 +7,7 @@ from database.models import Site
 from database.session import async_session_factory, engine
 from site_manager import remove_site as do_remove
 from site_manager.custom_domains import write_nginx_maps
+from utils.sentry import init_sentry
 
 
 async def _main():
@@ -58,6 +59,7 @@ async def _main():
 
 
 def main():
+    init_sentry("remove_site")
     asyncio.run(_main())
 
 

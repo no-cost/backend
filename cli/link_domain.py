@@ -11,6 +11,7 @@ from site_manager.custom_domains import (
     link_custom_domain,
     unlink_custom_domain,
 )
+from utils.sentry import init_sentry
 
 
 async def _main():
@@ -59,6 +60,7 @@ def _extract_parent_domain(hostname: str) -> str | None:
 
 
 def main():
+    init_sentry("link_domain")
     asyncio.run(_main())
 
 

@@ -6,6 +6,7 @@ from database.models import Site
 from database.session import async_session_factory, engine
 from site_manager.tenant_config import update_config
 from utils.mail import send_donor_thank_you
+from utils.sentry import init_sentry
 
 
 async def _main():
@@ -43,6 +44,7 @@ async def _main():
 
 
 def main():
+    init_sentry("make_donor")
     asyncio.run(_main())
 
 
